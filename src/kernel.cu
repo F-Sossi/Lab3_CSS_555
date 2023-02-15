@@ -28,11 +28,11 @@
 #include <cuda_runtime.h>
 #include <cmath>
 #include "device_launch_parameters.h"
-#include "Cuda_vector_add.h"
+#include "vector_add.h"
 
 // Block and thread count to run different configurations when testing
 //   different block sizes use add_bloc() when testing different 
-//   thread counts use add_thread()
+//   thread counts use add_thread() add this to check
 
 // Threads 8 64 128 512 1024 
 constexpr auto THREAD_PER_BLOCK = 128;
