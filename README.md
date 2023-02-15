@@ -17,5 +17,7 @@ This will keep all the source files in the cloned folder because we all have dif
 
 After changed made to files save and push from the cloned folder.
 
+If you make any other .h files make sure they are put in the cloned folder and re0linked to your chosen environment.
+
 
 Please add to this for those using nvcc or other IDE so we are keeping this updated
