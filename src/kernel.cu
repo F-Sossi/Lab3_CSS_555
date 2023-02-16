@@ -32,7 +32,7 @@
 
 // Block and thread count to run different configurations when testing
 //   different block sizes use add_bloc() when testing different 
-//   thread counts use add_thread() add this to check
+//   thread counts use add_thread() add this to check added
 
 // Threads 8 64 128 512 1024 
 constexpr auto THREAD_PER_BLOCK = 128;
