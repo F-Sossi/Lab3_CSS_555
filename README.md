@@ -21,3 +21,7 @@ If you make any other .h files make sure they are put in the cloned folder and r
 
 
 Please add to this for those using nvcc or other IDE so we are keeping this updated
+
+Linux / local or remote
+
+nvcc -g kernel.cu -o lab3
