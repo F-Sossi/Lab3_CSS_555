@@ -25,3 +25,9 @@ Please add to this for those using nvcc or other IDE so we are keeping this upda
 Linux / local or remote
 
 1. nvcc -g kernel.cu -o lab3
+
+Nvprof command-line call to get the cach transactions
+nvprof --metrics l1_cache_global_hit_rate,l1_cache_local_hit_rate
+
+See below link. nvprof --query-metrics outputs lots of metric, a couple I used above
+https://simoncblyth.bitbucket.io/env/notes/cuda/cuda_profiling/
