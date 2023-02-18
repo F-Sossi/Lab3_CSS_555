@@ -47,3 +47,17 @@ nvprof --metrics l1_cache_global_hit_rate,l1_cache_local_hit_rate
 
 See below link. nvprof --query-metrics outputs lots of metric, a couple I used above
 https://simoncblyth.bitbucket.io/env/notes/cuda/cuda_profiling/
+
+Git Workflow:
+
+clone to local machine: git clone <hhtps>
+update: git pull
+Make working branch: git branch <name of feature>
+checkout branch: git checkout <name of branch>
+Push branch to repo (so we can all see it): git push --set-upstream origin <name of branch>
+
+Merging:
+
+go to branch in github (drop down where it says main)
+on the branch you want to merge hit contribute and fill out pull request
+
