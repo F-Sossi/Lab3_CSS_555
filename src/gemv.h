@@ -36,10 +36,6 @@ void gemv_kernel(T* A, T* x, T* y, int m, int n) {
     }
 }
 
-
-
-
-
 //---------------------------------------------------------------------------
 // Function to return time
 // Input: none

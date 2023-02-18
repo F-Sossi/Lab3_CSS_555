@@ -161,10 +161,9 @@ int main() {
 	}
 	std::cout << std::endl;
 
-
-	cudaFree(device_vector);
-	cudaFree(device_matrix);
-	cudaFree(device_result);
-		
+	free(vector);
+	free(matrix);
+	free(ref_result);
+	free(calc_result);
     
 }
