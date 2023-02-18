@@ -19,6 +19,28 @@
 #include <random>
 
 //---------------------------------------------------------------------------
+// Function for Naive Matrix Vector Multiplication
+// Input: pointers to matrix, vector, and result vector, matrix dimensions
+// Output: none
+//---------------------------------------------------------------------------
+template<typename T>
+__global__
+void gemv_kernel(T* A, T* x, T* y, int m, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < m) {
+        T sum = 0.0;
+        for (int j = 0; j < n; j++) {
+            sum += A[i * n + j] * x[j];
+        }
+        y[i] = sum;
+    }
+}
+
+
+
+
+
+//---------------------------------------------------------------------------
 // Function to return time
 // Input: none
 // Output: returns time in nanoseconds
