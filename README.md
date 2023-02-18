@@ -28,6 +28,15 @@ Linux / local or remote
 
 Note: -arch=sm86 is your compute capability in this case 8.6
 
+For debugging:
+
+nvcc -g -arch=sm_86 -lcublas kernel.cu -o program
+
+For device debugging:
+
+nvcc -g -G -arch=sm_86 -lcublas kernel.cu -o program
+
+
 Profile:
 
 1. ncu -o profile lab3
