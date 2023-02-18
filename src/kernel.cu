@@ -24,6 +24,13 @@
 //   different block sizes use add_bloc() when testing different 
 //   thread counts use add_thread() add this to check added
 
+// NOTE: one but not both of these should be defined
+// Test parameters all 2's to check 
+//#define TESTPARAM
+// Random values for vector and matrix
+#define REALDATA
+
+
 #define REFERENCE
 #define PART1
 #define DEBUG
@@ -33,6 +40,7 @@
 
 // Size of the vector
 constexpr int n = 10;
+constexpr int THREAD_PER_BLOCK = 32;
 
 
 int main() {
@@ -46,7 +54,9 @@ int main() {
 	double* vector = (double*)malloc(n * sizeof(double));
 	double* matrix = (double*)malloc(n * n * sizeof(double));
 	double* ref_result = (double*)malloc(n * sizeof(double));		
-	double* calc_result = (double*)malloc(n * sizeof(double));		
+	double* calc_result = (double*)malloc(n * sizeof(double));
+
+#ifdef TESTPARAM
 
 	// fill vector with 2's
 	for (int i = 0; i < n; i++) {
@@ -59,6 +69,29 @@ int main() {
 			matrix[i * n + j] = 2;
 		}
 	}
+
+#endif
+
+#ifdef REALDATA
+
+	// random number generator
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> dis(0, 10);
+
+	// fill vector with random numbers
+	for (int i = 0; i < n; i++) {
+		vector[i] = dis(gen);
+	}
+
+	// fill matrix with random numbers
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			matrix[i * n + j] = dis(gen);
+		}
+	}
+
+#endif
 
 #ifdef DEBUG
 
@@ -135,8 +168,8 @@ int main() {
 
 	// call gemv_kernel
 	dim3 grid(n);
-	dim3 block(1);
-	gemv_kernel<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+	dim3 block(THREAD_PER_BLOCK);
+	gemv_kernel2<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
 
 	// Copy the result from GPU memory to host memory
 	cudaMemcpy(calc_result, device_result2, n * sizeof(double), cudaMemcpyDeviceToHost);
@@ -146,6 +179,8 @@ int main() {
 	cudaFree(device_result2);
 
 #endif
+
+#ifdef DEBUG
 
 	// print reference result
 	std::cout << "Reference Result" << std::endl;
@@ -160,6 +195,8 @@ int main() {
 		std::cout << calc_result[i] << " ";
 	}
 	std::cout << std::endl;
+
+#endif
 
 	free(vector);
 	free(matrix);
