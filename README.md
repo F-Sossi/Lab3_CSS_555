@@ -63,3 +63,13 @@ Merging:
 go to branch in github (drop down where it says main)
 on the branch you want to merge hit contribute and fill out pull request
 
+Parameter Operations:
+
+Note this section: TESTPARAM is all 2's to check basic operation REALDATA is randoms and there is a significant bit of divergence there due to the number of operations.
+
+// NOTE: one but not both of these should be defined
+// Test parameters all 2's to check 
+//#define TESTPARAM
+// Random values for vector and matrix
+#define REALDATA
+
