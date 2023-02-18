@@ -18,14 +18,15 @@
 #include <chrono>
 #include <random>
 
+
+
 //---------------------------------------------------------------------------
 // Function for Naive Matrix Vector Multiplication
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
 // Output: none
 //---------------------------------------------------------------------------
 template<typename T>
-__global__
-void gemv_kernel(T* A, T* x, T* y, int m, int n) {
+__global__ void gemv_kernel(T* A, T* x, T* y, int m, int n) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < m) {
         T sum = 0.0;
@@ -35,6 +36,51 @@ void gemv_kernel(T* A, T* x, T* y, int m, int n) {
         y[i] = sum;
     }
 }
+
+
+__global__ void gemv_kernel2(double* A, double* x, double* y, int m, int n) {
+    
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < m) {
+        
+        long double sum = 0.0;
+        
+        for (int j = 0; j < n; j++) {
+            sum += A[i * n + j] * x[j];
+        }
+        
+        y[i] = sum;
+    }
+}
+
+/* template<typename T>
+__global__ void gemv_kernel3(T* A, T* x, T* y, int m, int n,) {
+    // shared memory buffer
+    extern __shared__ T input_vector[THREAD_PER_BLOCK];
+    extern __shared__ T matrix_data[THREAD_PER_BLOCK][THREAD_PER_BLOCK];
+
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < m) {
+        T sum = 0.0;
+        int thread_index = threadIdx.x;
+        // each thread loads one element of x into shared memory
+        input_vector[thread_index] = x[thread_index];
+        for (int j = 0; j < n; j += blockDim.x) {
+            // each thread in the block loads a tile of A into shared memory
+            matrix_data[thread_index][j + threadIdx.y] = A[i * n + j + threadIdx.y];
+            __syncthreads();
+            for (int k = 0; k < blockDim.x; k++) {
+                // each thread computes multiple elements of the output vector
+                sum += matrix_data[thread_index][k] * input_vector[k];
+            }
+            __syncthreads();
+        }
+        y[i] = sum;
+    }
+} */
+
+
+
 
 //---------------------------------------------------------------------------
 // Function to return time
