@@ -24,17 +24,17 @@ Please add to this for those using nvcc or other IDE so we are keeping this upda
 
 Linux / local or remote
 
-1. nvcc -arch=sm_86 -lcublas kernel.cu -o program
+1. nvcc -arch=sm_86 -lcublas kernel.cu -o lab3
 
 Note: -arch=sm86 is your compute capability in this case 8.6
 
 For debugging:
 
-nvcc -g -arch=sm_86 -lcublas kernel.cu -o program
+nvcc -g -arch=sm_86 -lcublas kernel.cu -o lab3
 
 For device debugging:
 
-nvcc -g -G -arch=sm_86 -lcublas kernel.cu -o program
+nvcc -g -G -arch=sm_86 -lcublas kernel.cu -o lab3
 
 
 Profile:
