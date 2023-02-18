@@ -24,7 +24,23 @@ Please add to this for those using nvcc or other IDE so we are keeping this upda
 
 Linux / local or remote
 
-1. nvcc -g kernel.cu -o lab3
+1. nvcc -arch=sm_86 -lcublas kernel.cu -o lab3
+
+Note: -arch=sm86 is your compute capability in this case 8.6
+
+For debugging:
+
+nvcc -g -arch=sm_86 -lcublas kernel.cu -o lab3
+
+For device debugging:
+
+nvcc -g -G -arch=sm_86 -lcublas kernel.cu -o lab3
+
+
+Profile:
+
+1. ncu -o profile lab3
+
 
 Nvprof command-line call to get the cach transactions
 nvprof --metrics l1_cache_global_hit_rate,l1_cache_local_hit_rate
