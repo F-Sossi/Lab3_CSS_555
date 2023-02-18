@@ -56,6 +56,8 @@ Make working branch: git branch <name of feature>
 checkout branch: git checkout <name of branch>
 Push branch to repo (so we can all see it): git push --set-upstream origin <name of branch>
 
+NOTE: to check which branch you are on: git staus
+
 Merging:
 
 go to branch in github (drop down where it says main)
