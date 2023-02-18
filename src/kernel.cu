@@ -18,13 +18,14 @@
 #include <cublas_v2.h>
 #include <cmath>
 #include "device_launch_parameters.h"
-#include "vector_add.h"
+#include "gemv.h"
 
 // Block and thread count to run different configurations when testing
 //   different block sizes use add_bloc() when testing different 
 //   thread counts use add_thread() add this to check added
 
 #define REFERENCE
+#define PART1
 #define DEBUG
 
 // Threads 8 64 128 512 1024 
@@ -40,14 +41,6 @@ int main() {
 	std::vector<long long> execution_w_memory;
 	std::vector<long long> execution_wo_memory;
 
-	// allocate pointers to GPU memory
-	double* device_vector = nullptr;
-	double* device_matrix = nullptr;
-	double* device_result = nullptr;
-
-	cudaMalloc((void**)&device_vector, n * sizeof(double));
-	cudaMalloc((void**)&device_matrix, n * n * sizeof(double));
-	cudaMalloc((void**)&device_result, n * n * sizeof(double));
 
 	// Allocate memory for each vector on host
 	double* vector = (double*)malloc(n * sizeof(double));
@@ -89,6 +82,15 @@ int main() {
 
 #ifdef REFERENCE
 
+	// allocate pointers to GPU memory
+	double* device_vector = nullptr;
+	double* device_matrix = nullptr;
+	double* device_result = nullptr;
+
+	cudaMalloc((void**)&device_vector, n * sizeof(double));
+	cudaMalloc((void**)&device_matrix, n * n * sizeof(double));
+	cudaMalloc((void**)&device_result, n * n * sizeof(double));
+
 	// Copy input data to GPU memory
 	cudaMemcpy(device_vector, vector, n * sizeof(double), cudaMemcpyHostToDevice);
 	cudaMemcpy(device_matrix, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
@@ -110,9 +112,40 @@ int main() {
 	// Destroy the cuBLAS handle
 	cublasDestroy(handle);
 
+	cudaFree(device_vector);
+	cudaFree(device_matrix);
+	cudaFree(device_result);
+		
 #endif
 
+#ifdef PART1
 
+	// allocate pointers to GPU memory
+	double* device_vector2 = nullptr;
+	double* device_matrix2 = nullptr;
+	double* device_result2 = nullptr;
+
+	cudaMalloc((void**)&device_vector2, n * sizeof(double));
+	cudaMalloc((void**)&device_matrix2, n * n * sizeof(double));
+	cudaMalloc((void**)&device_result2, n * sizeof(double));
+
+	// Copy input data to GPU memory
+	cudaMemcpy(device_vector2, vector, n * sizeof(double), cudaMemcpyHostToDevice);
+	cudaMemcpy(device_matrix2, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
+
+	// call gemv_kernel
+	dim3 grid(n);
+	dim3 block(1);
+	gemv_kernel<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+
+	// Copy the result from GPU memory to host memory
+	cudaMemcpy(calc_result, device_result2, n * sizeof(double), cudaMemcpyDeviceToHost);
+
+	cudaFree(device_vector2);
+	cudaFree(device_matrix2);
+	cudaFree(device_result2);
+
+#endif
 
 	// print reference result
 	std::cout << "Reference Result" << std::endl;
