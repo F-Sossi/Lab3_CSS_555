@@ -50,11 +50,11 @@ https://simoncblyth.bitbucket.io/env/notes/cuda/cuda_profiling/
 
 Git Workflow:
 
-clone to local machine: git clone <hhtps>
-update: git pull
-Make working branch: git branch <name of feature>
-checkout branch: git checkout <name of branch>
-Push branch to repo (so we can all see it): git push --set-upstream origin <name of branch>
+1. clone to local machine: git clone <hhtps>
+2. update: git pull
+3. Make working branch: git branch <name of feature>
+4. checkout branch: git checkout <name of branch>
+5. Push branch to repo (so we can all see it): git push --set-upstream origin <name of branch>
 
 NOTE: to check which branch you are on: git staus
 
