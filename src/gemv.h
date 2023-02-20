@@ -36,9 +36,6 @@
 #define PART2
 #define DEBUG
 
-// Threads 8 64 128 512 1024 
-//constexpr auto THREAD_PER_BLOCK = 128;
-
 // Size of the vector
 constexpr int n = 32;
 constexpr int THREAD_PER_BLOCK = 32;
