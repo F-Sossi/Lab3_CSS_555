@@ -18,13 +18,6 @@
 #include "device_launch_parameters.h"
 #include "gemv.h"
 
-// Block and thread count to run different configurations when testing
-//   different block sizes use add_bloc() when testing different 
-//   thread counts use add_thread() add this to check added
-
-
-
-
 int main() {
 	
 	// vectors to hold timing data
