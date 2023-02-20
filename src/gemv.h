@@ -1,22 +1,50 @@
 //---------------------------------------------------------------------------
-// CUDA Vector add.h
+// gemv.h
 // Author: Frank Sossi
 // 
 // File contains: 
-// get_time() - returns the current time in milliseconds
-// add_grid() - CUDA kernel that adds two vectors
-// random_int() - returns a random integer between min and max
-// write_data() - writes the execution time to a CSV file
-// vector_add() - reference function that adds two vectors
+//		- gemv_kernel_part1_ver1() - Function for Naive Matrix Vector Multiplication
+//		- gemv_part2_ver1() - Function for Shared memeory Matrix Vector Multiplication
+//		- get_time() - Function to return time
+//		- add_grid() - Kernel function to add two vectors
+//		- add_block() - Kernel function to add two vectors for use with specified blocks
+//		- add_thread() - Kernel function to add two vectors for use with specified blocks
+//		- random_int() - Function to generate random integers
+//		- Function for Shared memeory Matrix Vector Multiplication
+//		- Function to return time
+//		- Kernel function to add two vectors
 // 
 //---------------------------------------------------------------------------
 #pragma once
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include <math.h>
 #include <stdio.h>
 #include <fstream>
 #include <chrono>
 #include <random>
+
+// NOTE: one but not both of these should be defined
+// Test parameters all 2's to check 
+#define TESTPARAM
+// Random values for vector and matrix
+//#define REALDATA
+
+
+#define REFERENCE
+//#define PART1
+#define PART2
+#define DEBUG
+
+// Threads 8 64 128 512 1024 
+//constexpr auto THREAD_PER_BLOCK = 128;
+
+// Size of the vector
+constexpr int n = 32;
+constexpr int THREAD_PER_BLOCK = 32;
+constexpr int BLOCK_SIZE = 32;
+
+
 
 
 
@@ -26,61 +54,63 @@
 // Output: none
 //---------------------------------------------------------------------------
 template<typename T>
-__global__ void gemv_kernel(T* A, T* x, T* y, int m, int n) {
+__global__ void gemv_kernel_part1_ver1(T* matrix, T* vector, T* result, int row, int col) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < m) {
+    if (i < row) {
+        
         T sum = 0.0;
-        for (int j = 0; j < n; j++) {
-            sum += A[i * n + j] * x[j];
+        
+        for (int j = 0; j < col; j++) {
+           // use fused multiply-add to improve performance 
+           sum = fma(matrix[i * col + j], vector[j], sum); 
         }
-        y[i] = sum;
+        result[i] = sum;
     }
+
 }
 
+///---------------------------------------------------------------------------
+// Function for Shared memeory Matrix Vector Multiplication
+// Input: pointers to matrix, vector, and result vector, matrix dimensions
+// Output: none
+//---------------------------------------------------------------------------
+template<typename T>
+__global__ void gemv_part2_ver1(const T * matrix, const T * vector, T * result, const unsigned int rows, const unsigned int col)
+{
+    const unsigned int thread_index = threadIdx.x + blockIdx.x * blockDim.x;
 
-__global__ void gemv_kernel2(double* A, double* x, double* y, int m, int n) {
+    __shared__ T vector_shared[BLOCK_SIZE];
+
+    T temp = 0.0;
+
     
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < m) {
-        
-        long double sum = 0.0;
-        
-        for (int j = 0; j < n; j++) {
-            sum += A[i * n + j] * x[j];
+    for (unsigned int i = 0; i < ((col + BLOCK_SIZE - 1)/ BLOCK_SIZE); ++i)
+    {
+        if ((i * BLOCK_SIZE + threadIdx.x) <  col) { 
+            vector_shared[threadIdx.x] = vector[threadIdx.x + i * BLOCK_SIZE];
         }
-        
-        y[i] = sum;
+        else{
+            vector_shared[threadIdx.x] = 0.0;
+        }
+            
+        __syncthreads();
+
+
+        for (unsigned int j = 0; j < BLOCK_SIZE; ++j) {
+            // Col ordering
+            temp += matrix[thread_index + (j + BLOCK_SIZE * i) * rows] * vector_shared[j];
+
+        }
+
+        __syncthreads();
     }
+
+    if (thread_index < rows){
+
+        result[thread_index] = temp;
+    }
+
 }
-
-/* template<typename T>
-__global__ void gemv_kernel3(T* A, T* x, T* y, int m, int n,) {
-    // shared memory buffer
-    extern __shared__ T input_vector[THREAD_PER_BLOCK];
-    extern __shared__ T matrix_data[THREAD_PER_BLOCK][THREAD_PER_BLOCK];
-
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < m) {
-        T sum = 0.0;
-        int thread_index = threadIdx.x;
-        // each thread loads one element of x into shared memory
-        input_vector[thread_index] = x[thread_index];
-        for (int j = 0; j < n; j += blockDim.x) {
-            // each thread in the block loads a tile of A into shared memory
-            matrix_data[thread_index][j + threadIdx.y] = A[i * n + j + threadIdx.y];
-            __syncthreads();
-            for (int k = 0; k < blockDim.x; k++) {
-                // each thread computes multiple elements of the output vector
-                sum += matrix_data[thread_index][k] * input_vector[k];
-            }
-            __syncthreads();
-        }
-        y[i] = sum;
-    }
-} */
-
-
-
 
 //---------------------------------------------------------------------------
 // Function to return time
