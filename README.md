@@ -50,11 +50,11 @@ https://simoncblyth.bitbucket.io/env/notes/cuda/cuda_profiling/
 
 Git Workflow:
 
-clone to local machine: git clone <hhtps>
-update: git pull
-Make working branch: git branch <name of feature>
-checkout branch: git checkout <name of branch>
-Push branch to repo (so we can all see it): git push --set-upstream origin <name of branch>
+1. clone to local machine: git clone "https:/somerepo"
+2. update: git pull
+3. Make working branch: git branch "name of feature"
+4. checkout branch: git checkout "name of branch"
+5. Push branch to repo (so we can all see it): git push --set-upstream origin "name of branch"
 
 NOTE: to check which branch you are on: git staus
 
@@ -62,4 +62,14 @@ Merging:
 
 go to branch in github (drop down where it says main)
 on the branch you want to merge hit contribute and fill out pull request
+
+Parameter Operations:
+
+Note this section: TESTPARAM is all 2's to check basic operation REALDATA is randoms and there is a significant bit of divergence there due to the number of operations.
+
+// NOTE: one but not both of these should be defined
+// Test parameters all 2's to check 
+//#define TESTPARAM
+// Random values for vector and matrix
+#define REALDATA
 
