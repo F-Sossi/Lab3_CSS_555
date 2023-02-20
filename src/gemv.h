@@ -37,7 +37,7 @@
 #define DEBUG
 
 // Size of the vector
-constexpr int n = 32;
+constexpr int n = 1024;
 constexpr int THREAD_PER_BLOCK = 32;
 constexpr int BLOCK_SIZE = 32;
 
