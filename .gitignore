@@ -34,3 +34,5 @@
 *.vscode
 *.json
 *.csv
+*.code-workspace
+*.idea

@@ -12,11 +12,9 @@
 //---------------------------------------------------------------------------
 #include <iostream>
 #include <vector>
-#include <chrono>
 #include <random>
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
-#include <cmath>
 #include "device_launch_parameters.h"
 #include "gemv.h"
 
@@ -24,23 +22,7 @@
 //   different block sizes use add_bloc() when testing different 
 //   thread counts use add_thread() add this to check added
 
-// NOTE: one but not both of these should be defined
-// Test parameters all 2's to check 
-//#define TESTPARAM
-// Random values for vector and matrix
-#define REALDATA
 
-
-#define REFERENCE
-#define PART1
-#define DEBUG
-
-// Threads 8 64 128 512 1024 
-//constexpr auto THREAD_PER_BLOCK = 128;
-
-// Size of the vector
-constexpr int n = 10;
-constexpr int THREAD_PER_BLOCK = 32;
 
 
 int main() {
@@ -77,7 +59,7 @@ int main() {
 	// random number generator
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<> dis(0, 10);
+	std::uniform_real_distribution<> dis(0, 2);
 
 	// fill vector with random numbers
 	for (int i = 0; i < n; i++) {
@@ -122,7 +104,7 @@ int main() {
 
 	cudaMalloc((void**)&device_vector, n * sizeof(double));
 	cudaMalloc((void**)&device_matrix, n * n * sizeof(double));
-	cudaMalloc((void**)&device_result, n * n * sizeof(double));
+	cudaMalloc((void**)&device_result, n * sizeof(double));
 
 	// Copy input data to GPU memory
 	cudaMemcpy(device_vector, vector, n * sizeof(double), cudaMemcpyHostToDevice);
@@ -169,8 +151,40 @@ int main() {
 	// call gemv_kernel
 	dim3 grid(n);
 	dim3 block(THREAD_PER_BLOCK);
-	gemv_kernel2<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+	gemv_kernel_part1_ver1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
 
+	cudaDeviceSynchronize();
+	// Copy the result from GPU memory to host memory
+	cudaMemcpy(calc_result, device_result2, n * sizeof(double), cudaMemcpyDeviceToHost);
+
+	cudaFree(device_vector2);
+	cudaFree(device_matrix2);
+	cudaFree(device_result2);
+
+#endif
+
+#ifdef PART2
+
+	// allocate pointers to GPU memory
+	double* device_vector2 = nullptr;
+	double* device_matrix2 = nullptr;
+	double* device_result2 = nullptr;
+
+	cudaMalloc((void**)&device_vector2, n * sizeof(double));
+	cudaMalloc((void**)&device_matrix2, n * n * sizeof(double));
+	cudaMalloc((void**)&device_result2, n * sizeof(double));
+
+	// Copy input data to GPU memory
+	cudaMemcpy(device_vector2, vector, n * sizeof(double), cudaMemcpyHostToDevice);
+	cudaMemcpy(device_matrix2, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
+
+	int grid_size = ceil(n / (float)THREAD_PER_BLOCK);
+    dim3 block_dim(THREAD_PER_BLOCK, BLOCK_SIZE);
+    dim3 grid_dim(grid_size, 1);
+    gemv_part2_ver1<<<grid_dim, block_dim>>>(device_matrix2, device_vector2, device_result2, n, n);
+
+
+	cudaDeviceSynchronize();
 	// Copy the result from GPU memory to host memory
 	cudaMemcpy(calc_result, device_result2, n * sizeof(double), cudaMemcpyDeviceToHost);
 
