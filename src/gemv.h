@@ -44,17 +44,13 @@ constexpr int n = 32;
 constexpr int THREAD_PER_BLOCK = 32;
 constexpr int BLOCK_SIZE = 32;
 
-
-
-
-
 //---------------------------------------------------------------------------
 // Function for Naive Matrix Vector Multiplication
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
 // Output: none
 //---------------------------------------------------------------------------
 template<typename T>
-__global__ void gemv_kernel_part1_ver1(T* matrix, T* vector, T* result, int row, int col) {
+__global__ void gemv_kernel_part1_ver1(const T* matrix, const T* vector, T* result, const int row, const int col) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < row) {
         
