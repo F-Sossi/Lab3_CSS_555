@@ -24,183 +24,111 @@
 //   different block sizes use add_bloc() when testing different 
 //   thread counts use add_thread() add this to check added
 
-// NOTE: one but not both of these should be defined
-// Test parameters all 2's to check 
-//#define TESTPARAM
-// Random values for vector and matrix
-#define REALDATA
-
-
-#define REFERENCE
-#define PART1
-#define DEBUG
-
 // Threads 8 64 128 512 1024 
 //constexpr auto THREAD_PER_BLOCK = 128;
 
-// Size of the vector
-constexpr int n = 10;
+
+
+constexpr int MEMORY_STRIDE    = 33;
 constexpr int THREAD_PER_BLOCK = 32;
 
 
-int main() {
-	
-	// vectors to hold timing data
-	std::vector<long long> execution_w_memory;
-	std::vector<long long> execution_wo_memory;
-
-
-	// Allocate memory for each vector on host
-	double* vector = (double*)malloc(n * sizeof(double));
-	double* matrix = (double*)malloc(n * n * sizeof(double));
-	double* ref_result = (double*)malloc(n * sizeof(double));		
-	double* calc_result = (double*)malloc(n * sizeof(double));
-
-#ifdef TESTPARAM
-
-	// fill vector with 2's
-	for (int i = 0; i < n; i++) {
-		vector[i] = 2;
-	}
-
-	// fill matrix with 2's
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < n; j++) {
-			matrix[i * n + j] = 2;
-		}
-	}
-
-#endif
-
-#ifdef REALDATA
-
-	// random number generator
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<> dis(0, 10);
-
-	// fill vector with random numbers
-	for (int i = 0; i < n; i++) {
-		vector[i] = dis(gen);
-	}
-
-	// fill matrix with random numbers
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < n; j++) {
-			matrix[i * n + j] = dis(gen);
-		}
-	}
-
-#endif
-
-#ifdef DEBUG
-
-	// print vector
-	std::cout << "Vector" << std::endl;
-	for (int i = 0; i < n; i++) {
-		std::cout << vector[i] << " ";
-	}
-	std::cout << std::endl;
-
-	// print matrix
-	std::cout << "Matrix" << std::endl;
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < n; j++) {
-			std::cout << matrix[i * n + j] << " ";
-		}
-		std::cout << std::endl;
-	}
-
-#endif
-
-#ifdef REFERENCE
-
-	// allocate pointers to GPU memory
-	double* device_vector = nullptr;
-	double* device_matrix = nullptr;
-	double* device_result = nullptr;
-
-	cudaMalloc((void**)&device_vector, n * sizeof(double));
-	cudaMalloc((void**)&device_matrix, n * n * sizeof(double));
-	cudaMalloc((void**)&device_result, n * n * sizeof(double));
-
-	// Copy input data to GPU memory
-	cudaMemcpy(device_vector, vector, n * sizeof(double), cudaMemcpyHostToDevice);
-	cudaMemcpy(device_matrix, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
-
-	// Create a handle for cuBLAS
-	cublasHandle_t handle;
-	cublasCreate(&handle);
-
-	// Perform the vector-matrix multiplication using cuBLAS
-	// Perform the matrix-vector multiplication using cuBLAS
-	double alpha = 1.0;
-	double beta = 0.0;
-	cublasDgemv(handle, CUBLAS_OP_N, n, n, &alpha, device_matrix, n, device_vector, 1, &beta, device_result, 1);
-
-
-	// Copy the result from GPU memory to host memory
-	cudaMemcpy(ref_result, device_result, n * sizeof(double), cudaMemcpyDeviceToHost);
-
-	// Destroy the cuBLAS handle
-	cublasDestroy(handle);
-
-	cudaFree(device_vector);
-	cudaFree(device_matrix);
-	cudaFree(device_result);
-		
-#endif
-
-#ifdef PART1
-
-	// allocate pointers to GPU memory
+void part_1(double* vector, double* matrix, double* result, unsigned int N)
+{
+	// Allocate pointers to GPU memory
 	double* device_vector2 = nullptr;
 	double* device_matrix2 = nullptr;
 	double* device_result2 = nullptr;
 
-	cudaMalloc((void**)&device_vector2, n * sizeof(double));
-	cudaMalloc((void**)&device_matrix2, n * n * sizeof(double));
-	cudaMalloc((void**)&device_result2, n * sizeof(double));
+	cudaMalloc((void**)&device_vector2, N * MEMORY_STRIDE     * sizeof(double));
+	cudaMalloc((void**)&device_matrix2, N * N * MEMORY_STRIDE * sizeof(double));
+	cudaMalloc((void**)&device_result2, N *  MEMORY_STRIDE    * sizeof(double));
 
 	// Copy input data to GPU memory
-	cudaMemcpy(device_vector2, vector, n * sizeof(double), cudaMemcpyHostToDevice);
-	cudaMemcpy(device_matrix2, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
+	cudaMemcpy(device_vector2, vector, N *     sizeof(double), cudaMemcpyHostToDevice);
+	cudaMemcpy(device_matrix2, matrix, N * N * sizeof(double), cudaMemcpyHostToDevice);
 
-	// call gemv_kernel
-	dim3 grid(n);
-	dim3 block(THREAD_PER_BLOCK);
-	gemv_kernel2<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+	// Call gemv_kernel
+	// dim3 num_blocks(N);
+	// dim3 threads_per_block(THREAD_PER_BLOCK);
+	// <<<grid_size, block_size>>
+	// <<number_of_blocks, number_of_threads>>
+	// The maximum number of threads in the block is limited to 1024.
+	gemv_kernel2<<<(N + 1023)/1024, N>>>(device_matrix2, device_vector2, device_result2, N, N);
 
 	// Copy the result from GPU memory to host memory
-	cudaMemcpy(calc_result, device_result2, n * sizeof(double), cudaMemcpyDeviceToHost);
+	cudaMemcpy(result, device_result2, N * sizeof(double), cudaMemcpyDeviceToHost);
 
 	cudaFree(device_vector2);
 	cudaFree(device_matrix2);
 	cudaFree(device_result2);
+}
 
-#endif
 
-#ifdef DEBUG
+int main() 
+{
+	// Vectors to hold timing data
+	// std::vector<long long> execution_w_memory;
+	// std::vector<long long> execution_wo_memory;
 
-	// print reference result
-	std::cout << "Reference Result" << std::endl;
-	for (int i = 0; i < n; i++) {
-		std::cout << ref_result[i] << " ";
+	unsigned int N = 32;
+
+	// Allocate memory for each vector on host
+	double* vector      = (double*)malloc(N *     sizeof(double));
+	double* matrix      = (double*)malloc(N * N * sizeof(double));
+	double* result = (double*)malloc(N *     sizeof(double));
+
+	// Random number generator
+	std::random_device rd;
+	std::mt19937 gen(rd()); // C++ standard 32 bit Mersenne Twister 19937 generator
+	std::uniform_real_distribution<> dis(0, 10);
+
+	// Fill vector with random numbers
+	for (int i = 0; i < N; i++) 
+	{
+		vector[i] = dis(gen);
+	}
+
+	// Fill matrix with random numbers
+	for (int i = 0; i < N; i++) 
+	{
+		for (int j = 0; j < N; j++) 
+		{
+			matrix[i * N + j] = dis(gen);
+		}
+	}
+
+	// Print vector
+	std::cout << "Vector" << std::endl;
+	for (int i = 0; i < N; i++) 
+	{
+		std::cout << vector[i] << " ";
 	}
 	std::cout << std::endl;
 
-	// print calculated result
+	// Print matrix
+	std::cout << "Matrix" << std::endl;
+	for (int i = 0; i < N; i++) 
+	{
+		for (int j = 0; j < N; j++) 
+		{
+			std::cout << matrix[i * N + j] << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	part_1(vector, matrix, result, N);
+
+	// Print calculated result
 	std::cout << "Calculated Result" << std::endl;
-	for (int i = 0; i < n; i++) {
-		std::cout << calc_result[i] << " ";
+	for (int i = 0; i < N; i++)
+	{
+		std::cout << result[i] << " ";
 	}
-	std::cout << std::endl;
 
-#endif
+	std::cout << std::endl;
 
 	free(vector);
 	free(matrix);
-	free(ref_result);
-	free(calc_result);
-    
+	free(result); 
 }
