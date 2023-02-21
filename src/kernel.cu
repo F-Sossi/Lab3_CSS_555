@@ -29,12 +29,19 @@
 
 
 
-constexpr int MEMORY_STRIDE    = 33;
-constexpr int THREAD_PER_BLOCK = 32;
+constexpr int MEMORY_STRIDE       = 33;
+// constexpr int THREAD_PER_BLOCK = 32;
 
 
 void part_1(double* vector, double* matrix, double* result, unsigned int N)
 {
+	cudaEvent_t start;
+	cudaEvent_t stop;
+	float milliseconds = 0;
+
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+	
 	// Allocate pointers to GPU memory
 	double* device_vector2 = nullptr;
 	double* device_matrix2 = nullptr;
@@ -54,10 +61,19 @@ void part_1(double* vector, double* matrix, double* result, unsigned int N)
 	// <<<grid_size, block_size>>
 	// <<number_of_blocks, number_of_threads>>
 	// The maximum number of threads in the block is limited to 1024.
-	gemv_kernel2<<<(N + 1023)/1024, N>>>(device_matrix2, device_vector2, device_result2, N, N);
+
+	cudaEventRecord(start, 0);
+
+	// Call the matrix vector - addition
+	gemv_kernel2<<<(N + 31)/N, N>>>(device_matrix2, device_vector2, device_result2, N, N);
 
 	// Copy the result from GPU memory to host memory
 	cudaMemcpy(result, device_result2, N * sizeof(double), cudaMemcpyDeviceToHost);
+
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&milliseconds, start, stop);
+	printf("Time elapsed: %f ms\n", milliseconds);
 
 	cudaFree(device_vector2);
 	cudaFree(device_matrix2);
