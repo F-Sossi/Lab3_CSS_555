@@ -72,8 +72,13 @@ void part_1(double* vector, double* matrix, double* result, unsigned int N)
 
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
+
+	unsigned int total_data_xfer = 2 * ((N * N * sizeof(double)) + (N * sizeof(double)) 
+								     + (N * sizeof(double)));
+
 	cudaEventElapsedTime(&milliseconds, start, stop);
-	printf("Time elapsed: %f ms\n", milliseconds);
+	printf("Data xfer: %f MB/s , Time elapsed: %f ms\n", 
+		   (total_data_xfer/milliseconds)/1024, milliseconds);
 
 	cudaFree(device_vector2);
 	cudaFree(device_matrix2);
