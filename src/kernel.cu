@@ -68,7 +68,7 @@ int main() {
 
 #endif
 
-#ifdef DEBUG
+#ifdef DEBUGINPUT
 
 	// print vector
 	std::cout << "Vector" << std::endl;
@@ -141,10 +141,14 @@ int main() {
 	cudaMemcpy(device_vector2, vector, n * sizeof(double), cudaMemcpyHostToDevice);
 	cudaMemcpy(device_matrix2, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
 
-	// call gemv_kernel
-	dim3 grid(n);
-	dim3 block(THREAD_PER_BLOCK);
+
+	const int num_blocks = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
+	const int max_blocks = 32767;
+	const int blocks = std::min(num_blocks, max_blocks);
+	dim3 grid(blocks, 1, 1);
+	dim3 block(THREAD_PER_BLOCK, 1, 1);
 	gemv_kernel_part1_ver1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+
 
 	cudaDeviceSynchronize();
 	// Copy the result from GPU memory to host memory
@@ -171,10 +175,17 @@ int main() {
 	cudaMemcpy(device_vector2, vector, n * sizeof(double), cudaMemcpyHostToDevice);
 	cudaMemcpy(device_matrix2, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
 
-	int grid_size = ceil(n / (float)THREAD_PER_BLOCK);
-    dim3 block_dim(THREAD_PER_BLOCK, BLOCK_SIZE);
-    dim3 grid_dim(grid_size, 1);
-    gemv_part2_ver1<<<grid_dim, block_dim>>>(device_matrix2, device_vector2, device_result2, n, n);
+
+	const int num_blocks = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
+	const int max_blocks = 32767;
+	const int blocks = std::min(num_blocks, max_blocks);
+	//const int block_size = BLOCK_SIZE;
+
+	dim3 grid(blocks, 1, 1);
+	dim3 block(THREAD_PER_BLOCK, 1, 1);
+
+	gemv_part2_ver2<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+
 
 
 	cudaDeviceSynchronize();
