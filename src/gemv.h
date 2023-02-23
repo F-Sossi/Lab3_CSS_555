@@ -33,9 +33,9 @@
 
 
 #define REFERENCE
-//#define PART1
+#define PART1
 //#define PART2
-#define PART3
+//#define PART3
 #define DEBUG
 //#define DEBUGINPUT
 
@@ -95,20 +95,6 @@ __global__ void gemv_kernel_part1_ver2(const T* matrix, const T* vector, T* resu
 // Output: none
 //---------------------------------------------------------------------------
 template<typename T>
-__global__ void gemv_kernel_part1_ver2(const T* matrix, const T* vector, T* result, const int row, const int col) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < row) {
-        
-        T sum = 0.0;
-        
-        for (int j = 0; j < col; j++) {
-           sum += matrix[i * col + j] * vector[j]; // multiply and accumulate
-        }
-        result[i] = sum;
-    }
-}
-
-template<typename T>
 __global__ void gemv_kernel_part1_ver3(const T* matrix, const T* vector, T* result, const int row, const int col) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < row) {
@@ -121,11 +107,7 @@ __global__ void gemv_kernel_part1_ver3(const T* matrix, const T* vector, T* resu
         result[i] = sum;
     }
 }
-
-
-
-
-
+ls
 ///---------------------------------------------------------------------------
 // Function for Shared memeory Matrix Vector Multiplication
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
