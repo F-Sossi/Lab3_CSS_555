@@ -5,6 +5,7 @@
 // File contains: 
 //		- gemv_kernel_part1_ver1() - Function for Naive Matrix Vector Multiplication
 //		- gemv_part2_ver1() - Function for Shared memeory Matrix Vector Multiplication
+//		- gemv_kernel_part3_ver1() - Function for Registers Matrix Vector Multiplication
 //		- get_time() - Function to return time
 //		- add_grid() - Kernel function to add two vectors
 //		- add_block() - Kernel function to add two vectors for use with specified blocks
@@ -34,6 +35,7 @@
 #define REFERENCE
 //#define PART1
 #define PART2
+//#define PART3
 #define DEBUG
 //#define DEBUGINPUT
 
@@ -224,7 +226,26 @@ __global__ void gemv_part2_ver3(const T * matrix, const T * vector, T * result, 
     }
 }
 
+//---------------------------------------------------------------------------
+// Function for Registers Matrix Vector Multiplication
+// Input: pointers to matrix, vector, and result vector, matrix dimensions
+// Output: none
+//---------------------------------------------------------------------------
+template<typename T>
+__global__ void gemv_kernel_part3_ver1(const T* matrix, const T* vector, T* result, const int row, const int col) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < row) {
+        
+        T sum = 0.0;
+        
+        for (int j = 0; j < col; j++) {
+           // use fused multiply-add to improve performance 
+           sum = fma(matrix[i * col + j], vector[j], sum); 
+        }
+        result[i] = sum;
+    }
 
+}
 
 //---------------------------------------------------------------------------
 // Function to return time
