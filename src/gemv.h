@@ -5,6 +5,7 @@
 // File contains: 
 //		- gemv_kernel_part1_ver1() - Function for Naive Matrix Vector Multiplication
 //		- gemv_part2_ver1() - Function for Shared memeory Matrix Vector Multiplication
+//		- gemv_kernel_part3_ver1() - Function for Registers Matrix Vector Multiplication
 //		- get_time() - Function to return time
 //		- add_grid() - Kernel function to add two vectors
 //		- add_block() - Kernel function to add two vectors for use with specified blocks
@@ -34,10 +35,12 @@
 #define REFERENCE
 //#define PART1
 #define PART2
+//#define PART3
 #define DEBUG
 //#define DEBUGINPUT
 
 // Size of the vector 8000 max for some reason
+// Part 3 is dependent on this value so if this is changed, make sure to inspect and possibly update part 3 kernel
 constexpr int n = 8000;
 // NOTE For further inquiry part 2 over 128 threads per block is not working
 constexpr int THREAD_PER_BLOCK = 128;
@@ -224,7 +227,35 @@ __global__ void gemv_part2_ver3(const T * matrix, const T * vector, T * result, 
     }
 }
 
+//---------------------------------------------------------------------------
+// Function for Registers Matrix Vector Multiplication
+// Input: pointers to matrix, vector, and result vector, matrix dimensions
+// Output: none
+//---------------------------------------------------------------------------
+template<typename T>
+__global__ void gemv_kernel_part3_ver1(const T* matrix, const T* vector, T* result, const int row, const int col) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < row) {
+        
+        T sum = 0.0;
+        
+        for (int j = 0; j < col; j+=10) {
+           // use fused multiply-add to improve performance 
+           sum = fma(matrix[i * col + j], vector[j], sum);
+	   sum = fma(matrix[i * col + (j + 1)], vector[(j + 1)], sum);
+           sum = fma(matrix[i * col + (j + 2)], vector[(j + 2)], sum);
+	   sum = fma(matrix[i * col + (j + 3)], vector[(j + 3)], sum);
+           sum = fma(matrix[i * col + (j + 4)], vector[(j + 4)], sum);
+	   sum = fma(matrix[i * col + (j + 5)], vector[(j + 5)], sum);
+           sum = fma(matrix[i * col + (j + 6)], vector[(j + 6)], sum);
+	   sum = fma(matrix[i * col + (j + 7)], vector[(j + 7)], sum);
+           sum = fma(matrix[i * col + (j + 8)], vector[(j + 8)], sum);
+	   sum = fma(matrix[i * col + (j + 9)], vector[(j + 9)], sum);
+        }
+        result[i] = sum;
+    }
 
+}
 
 //---------------------------------------------------------------------------
 // Function to return time
