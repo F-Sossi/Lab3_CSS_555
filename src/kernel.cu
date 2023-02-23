@@ -198,6 +198,40 @@ int main() {
 
 #endif
 
+#ifdef PART3
+
+	// allocate pointers to GPU memory
+	double* device_vector2 = nullptr;
+	double* device_matrix2 = nullptr;
+	double* device_result2 = nullptr;
+
+	cudaMalloc((void**)&device_vector2, n * sizeof(double));
+	cudaMalloc((void**)&device_matrix2, n * n * sizeof(double));
+	cudaMalloc((void**)&device_result2, n * sizeof(double));
+
+	// Copy input data to GPU memory
+	cudaMemcpy(device_vector2, vector, n * sizeof(double), cudaMemcpyHostToDevice);
+	cudaMemcpy(device_matrix2, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
+
+
+	const int num_blocks = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
+	const int max_blocks = 32767;
+	const int blocks = std::min(num_blocks, max_blocks);
+	dim3 grid(blocks, 1, 1);
+	dim3 block(THREAD_PER_BLOCK, 1, 1);
+	gemv_kernel_part3_ver1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+
+
+	cudaDeviceSynchronize();
+	// Copy the result from GPU memory to host memory
+	cudaMemcpy(calc_result, device_result2, n * sizeof(double), cudaMemcpyDeviceToHost);
+
+	cudaFree(device_vector2);
+	cudaFree(device_matrix2);
+	cudaFree(device_result2);
+
+#endif
+
 #ifdef DEBUG
 
 	// print reference result
