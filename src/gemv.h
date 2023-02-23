@@ -27,28 +27,28 @@
 
 // NOTE: one but not both of these should be defined
 // Test parameters all 2's to check 
-#define TESTPARAM
+//#define TESTPARAM
 // Random values for vector and matrix
-//#define REALDATA
+#define REALDATA
 
 
 #define REFERENCE
 //#define PART1
-#define PART2
-//#define PART3
+//#define PART2
+#define PART3
 #define DEBUG
 //#define DEBUGINPUT
 
 // Size of the vector 8000 max for some reason
 // Part 3 is dependent on this value so if this is changed, make sure to inspect and possibly update part 3 kernel
-constexpr int n = 8000;
+constexpr int n = 200;
 // NOTE For further inquiry part 2 over 128 threads per block is not working
-constexpr int THREAD_PER_BLOCK = 128;
+constexpr int THREAD_PER_BLOCK = 10;
 // this is the size of the block 
 constexpr int TILE_SIZE = 32;
 
 //---------------------------------------------------------------------------
-// Function for Naive Matrix Vector Multiplication
+// Function for Naive Matrix Vector Multiplication #DOES NOT WORK
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
 // Output: none
 //---------------------------------------------------------------------------
@@ -67,6 +67,64 @@ __global__ void gemv_kernel_part1_ver1(const T* matrix, const T* vector, T* resu
     }
 
 }
+
+//---------------------------------------------------------------------------
+// Function for Naive Matrix Vector Multiplication #DOES NOT WORK
+// Input: pointers to matrix, vector, and result vector, matrix dimensions
+//        without fma
+// Output: none
+//---------------------------------------------------------------------------
+template<typename T>
+__global__ void gemv_kernel_part1_ver2(const T* matrix, const T* vector, T* result, const int row, const int col) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < row) {
+        
+        T sum = 0.0;
+        
+        for (int j = 0; j < col; j++) {
+           sum += matrix[i * col + j] * vector[j]; // multiply and accumulate
+        }
+        result[i] = sum;
+    }
+}
+
+//---------------------------------------------------------------------------
+// Function for Naive Matrix Vector Multiplication #WORKs
+// Input: pointers to matrix, vector, and result vector, matrix dimensions
+//        without fma
+// Output: none
+//---------------------------------------------------------------------------
+template<typename T>
+__global__ void gemv_kernel_part1_ver2(const T* matrix, const T* vector, T* result, const int row, const int col) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < row) {
+        
+        T sum = 0.0;
+        
+        for (int j = 0; j < col; j++) {
+           sum += matrix[i * col + j] * vector[j]; // multiply and accumulate
+        }
+        result[i] = sum;
+    }
+}
+
+template<typename T>
+__global__ void gemv_kernel_part1_ver3(const T* matrix, const T* vector, T* result, const int row, const int col) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < row) {
+        
+        T sum = 0.0;
+        
+        for (int j = 0; j < col; j++) {
+            sum += matrix[j * row + i] * vector[j]; // multiply and accumulate with row-major ordering
+        }
+        result[i] = sum;
+    }
+}
+
+
+
+
 
 ///---------------------------------------------------------------------------
 // Function for Shared memeory Matrix Vector Multiplication
@@ -228,7 +286,7 @@ __global__ void gemv_part2_ver3(const T * matrix, const T * vector, T * result, 
 }
 
 //---------------------------------------------------------------------------
-// Function for Registers Matrix Vector Multiplication
+// Function for Registers Matrix Vector Multiplication #DOES NOT WORK
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
 // Output: none
 //---------------------------------------------------------------------------
@@ -241,21 +299,85 @@ __global__ void gemv_kernel_part3_ver1(const T* matrix, const T* vector, T* resu
         
         for (int j = 0; j < col; j+=10) {
            // use fused multiply-add to improve performance 
-           sum = fma(matrix[i * col + j], vector[j], sum);
-	   sum = fma(matrix[i * col + (j + 1)], vector[(j + 1)], sum);
-           sum = fma(matrix[i * col + (j + 2)], vector[(j + 2)], sum);
-	   sum = fma(matrix[i * col + (j + 3)], vector[(j + 3)], sum);
-           sum = fma(matrix[i * col + (j + 4)], vector[(j + 4)], sum);
-	   sum = fma(matrix[i * col + (j + 5)], vector[(j + 5)], sum);
-           sum = fma(matrix[i * col + (j + 6)], vector[(j + 6)], sum);
-	   sum = fma(matrix[i * col + (j + 7)], vector[(j + 7)], sum);
-           sum = fma(matrix[i * col + (j + 8)], vector[(j + 8)], sum);
-	   sum = fma(matrix[i * col + (j + 9)], vector[(j + 9)], sum);
+           sum = fma(matrix[j * row + i], vector[j], sum);
+	       sum = fma(matrix[j * row + (i + 1)], vector[(j + 1)], sum);
+           sum = fma(matrix[j * row + (i + 2)], vector[(j + 2)], sum);
+	       sum = fma(matrix[j * row + (i + 3)], vector[(j + 3)], sum);
+           sum = fma(matrix[j * row + (i + 4)], vector[(j + 4)], sum);
+	       sum = fma(matrix[j * row + (i + 5)], vector[(j + 5)], sum);
+           sum = fma(matrix[j * row + (i + 6)], vector[(j + 6)], sum);
+	       sum = fma(matrix[j * row + (i + 7)], vector[(j + 7)], sum);
+           sum = fma(matrix[j * row + (i + 8)], vector[(j + 8)], sum);
+	       sum = fma(matrix[j * row + (i + 9)], vector[(j + 9)], sum);
         }
         result[i] = sum;
     }
 
 }
+
+
+//---------------------------------------------------------------------------
+// Function for Registers Matrix Vector Multiplication #DOES NOT WORK
+// Input: pointers to matrix, vector, and result vector, matrix dimensions
+// Output: none
+//---------------------------------------------------------------------------
+template<typename T>
+__global__ void gemv_kernel_part3_ver2(const T* matrix, const T* vector, T* result, const int row, const int col) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < row) {
+        
+        T sum = 0.0;
+        
+        for (int j = 0; j < col; j+=10) {
+           // Multiply and accumulate with row-major ordering and basic arithmetic operations
+           sum += matrix[j * row + i] * vector[j];
+	       sum += matrix[j * row + (i + 1)] * vector[(j + 1)];
+           sum += matrix[j * row + (i + 2)] * vector[(j + 2)];
+	       sum += matrix[j * row + (i + 3)] * vector[(j + 3)];
+           sum += matrix[j * row + (i + 4)] * vector[(j + 4)];
+	       sum += matrix[j * row + (i + 5)] * vector[(j + 5)];
+           sum += matrix[j * row + (i + 6)] * vector[(j + 6)];
+	       sum += matrix[j * row + (i + 7)] * vector[(j + 7)];
+           sum += matrix[j * row + (i + 8)] * vector[(j + 8)];
+	       sum += matrix[j * row + (i + 9)] * vector[(j + 9)];
+        }
+        result[i] = sum;
+    }
+}
+
+//---------------------------------------------------------------------------
+// Function for Registers Matrix Vector Multiplication #WORKS
+// Input: pointers to matrix, vector, and result vector, matrix dimensions
+// Output: none
+//---------------------------------------------------------------------------
+
+template<typename T>
+__global__ void gemv_kernel_part3_ver4(const T* matrix, const T* vector, T* result, const int row, const int col) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < row) {
+        
+        T sum = 0.0;
+        
+        int j = 0;
+        for (; j < col - 7; j += 8) {
+            sum += matrix[j * row + i] * vector[j];
+            sum += matrix[(j + 1) * row + i] * vector[(j + 1)];
+            sum += matrix[(j + 2) * row + i] * vector[(j + 2)];
+            sum += matrix[(j + 3) * row + i] * vector[(j + 3)];
+            sum += matrix[(j + 4) * row + i] * vector[(j + 4)];
+            sum += matrix[(j + 5) * row + i] * vector[(j + 5)];
+            sum += matrix[(j + 6) * row + i] * vector[(j + 6)];
+            sum += matrix[(j + 7) * row + i] * vector[(j + 7)];
+        }
+        for (; j < col; j++) {
+            sum += matrix[j * row + i] * vector[j];
+        }
+        result[i] = sum;
+    }
+}
+
+
+
 
 //---------------------------------------------------------------------------
 // Function to return time
