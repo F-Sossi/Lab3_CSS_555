@@ -40,6 +40,7 @@
 //#define DEBUGINPUT
 
 // Size of the vector 8000 max for some reason
+// Part 3 is dependent on this value so if this is changed, make sure to inspect and possibly update part 3 kernel
 constexpr int n = 8000;
 // NOTE For further inquiry part 2 over 128 threads per block is not working
 constexpr int THREAD_PER_BLOCK = 128;
@@ -238,9 +239,18 @@ __global__ void gemv_kernel_part3_ver1(const T* matrix, const T* vector, T* resu
         
         T sum = 0.0;
         
-        for (int j = 0; j < col; j++) {
+        for (int j = 0; j < col; j+=10) {
            // use fused multiply-add to improve performance 
-           sum = fma(matrix[i * col + j], vector[j], sum); 
+           sum = fma(matrix[i * col + j], vector[j], sum);
+	   sum = fma(matrix[i * col + (j + 1)], vector[(j + 1)], sum);
+           sum = fma(matrix[i * col + (j + 2)], vector[(j + 2)], sum);
+	   sum = fma(matrix[i * col + (j + 3)], vector[(j + 3)], sum);
+           sum = fma(matrix[i * col + (j + 4)], vector[(j + 4)], sum);
+	   sum = fma(matrix[i * col + (j + 5)], vector[(j + 5)], sum);
+           sum = fma(matrix[i * col + (j + 6)], vector[(j + 6)], sum);
+	   sum = fma(matrix[i * col + (j + 7)], vector[(j + 7)], sum);
+           sum = fma(matrix[i * col + (j + 8)], vector[(j + 8)], sum);
+	   sum = fma(matrix[i * col + (j + 9)], vector[(j + 9)], sum);
         }
         result[i] = sum;
     }
