@@ -107,7 +107,7 @@ __global__ void gemv_kernel_part1_ver3(const T* matrix, const T* vector, T* resu
         result[i] = sum;
     }
 }
-ls
+
 ///---------------------------------------------------------------------------
 // Function for Shared memeory Matrix Vector Multiplication
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
