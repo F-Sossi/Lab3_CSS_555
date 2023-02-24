@@ -1,0 +1,6 @@
+Experiment 1:
+
+DATA: REALDATA set
+N value: 100
+THREAD_PER_BLOCK: 32
+TILE_SIZE: 32
