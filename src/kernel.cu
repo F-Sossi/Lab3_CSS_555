@@ -147,7 +147,7 @@ int main() {
 	const int blocks = std::min(num_blocks, max_blocks);
 	dim3 grid(blocks, 1, 1);
 	dim3 block(THREAD_PER_BLOCK, 1, 1);
-	gemv_kernel_part1_ver3<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+	gemv_kernel_part1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
 
 
 	cudaDeviceSynchronize();
@@ -219,7 +219,7 @@ int main() {
 	const int blocks = std::min(num_blocks, max_blocks);
 	dim3 grid(blocks, 1, 1);
 	dim3 block(THREAD_PER_BLOCK, 1, 1);
-	gemv_kernel_part3_ver4<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+	gemv_kernel_part3<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
 
 
 	cudaDeviceSynchronize();
