@@ -33,7 +33,7 @@ TILE_SIZE: 32
 
 # Experiment 2:
 
-N value: 4096 (divisible by 32)
+N value: 4096 (divisible by 32) <br>
 <<< 128, 32 >>> (4096 / 32 = 128 - exceeds the max of resident blocks with minimum threads in a warp) <br>
 <<< 108, 38 >>> (4096 / 38 = 107.8 blocks; trying a slight difference to the one above) <br>
 <<< 32, 128 >>> (8704 SPs / 68 SMs = 128 threads; will some of the SMs not be used?) <br>
