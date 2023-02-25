@@ -34,8 +34,8 @@
 
 #define REFERENCE
 //#define PART1
-//#define PART2
-#define PART3
+#define PART2
+//#define PART3
 #define DEBUG
 //#define DEBUGINPUT
 
@@ -43,9 +43,11 @@
 // Part 3 is dependent on this value so if this is changed, make sure to inspect and possibly update part 3 kernel
 constexpr int n = 200;
 // NOTE For further inquiry part 2 over 128 threads per block is not working
-constexpr int THREAD_PER_BLOCK = 10;
+constexpr int THREAD_PER_BLOCK = 32;
 // this is the size of the block 
 constexpr int TILE_SIZE = 32;
+// Max number of blocks as per spec
+constexpr int max_blocks = 32767;
 
 //---------------------------------------------------------------------------
 // Function for Naive Matrix Vector Multiplication #WORKs

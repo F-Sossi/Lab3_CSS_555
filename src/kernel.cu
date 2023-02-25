@@ -143,7 +143,7 @@ int main() {
 
 
 	const int num_blocks = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
-	const int max_blocks = 32767;
+	//const int max_blocks = 32767;
 	const int blocks = std::min(num_blocks, max_blocks);
 	dim3 grid(blocks, 1, 1);
 	dim3 block(THREAD_PER_BLOCK, 1, 1);
@@ -177,14 +177,14 @@ int main() {
 
 
 	const int num_blocks = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
-	const int max_blocks = 32767;
+	//const int max_blocks = 32767;
 	const int blocks = std::min(num_blocks, max_blocks);
 	//const int block_size = BLOCK_SIZE;
 
 	dim3 grid(blocks, 1, 1);
 	dim3 block(THREAD_PER_BLOCK, 1, 1);
 
-	gemv_part2_ver2<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+	gemv_part2_ver1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
 
 
 
@@ -215,7 +215,7 @@ int main() {
 
 
 	const int num_blocks = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
-	const int max_blocks = 32767;
+	//const int max_blocks = 32767;
 	const int blocks = std::min(num_blocks, max_blocks);
 	dim3 grid(blocks, 1, 1);
 	dim3 block(THREAD_PER_BLOCK, 1, 1);
