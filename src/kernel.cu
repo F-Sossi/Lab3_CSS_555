@@ -32,7 +32,6 @@
 constexpr int MEMORY_STRIDE       = 33;
 // constexpr int THREAD_PER_BLOCK = 32;
 
-
 void part_1(double* vector, double* matrix, double* result, unsigned int N)
 {
 	cudaEvent_t start;
