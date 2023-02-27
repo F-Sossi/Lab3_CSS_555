@@ -184,11 +184,18 @@ int main() {
 	dim3 grid(blocks, 1, 1);
 	dim3 block(THREAD_PER_BLOCK, 1, 1);
 
-	gemv_part2_ver1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+	gemv_part2_ver1_1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+	
+	cudaError_t err = cudaDeviceSynchronize();
+	if (err != cudaSuccess) {
+		printf("Kernel launch failed with error code %d: %s\n", err, cudaGetErrorString(err));
+	}
 
+	err = cudaGetLastError();
+	if (err != cudaSuccess) {
+		printf("Kernel encountered an error: %d: %s\n", err, cudaGetErrorString(err));
+	}
 
-
-	cudaDeviceSynchronize();
 	// Copy the result from GPU memory to host memory
 	cudaMemcpy(calc_result, device_result2, n * sizeof(double), cudaMemcpyDeviceToHost);
 
@@ -247,6 +254,19 @@ int main() {
 		std::cout << calc_result[i] << " ";
 	}
 	std::cout << std::endl;
+
+#endif
+
+#ifdef VERIFY
+
+	// verify the result
+	double error = 0.0;
+	for (int i = 0; i < n; i++) {
+		error += (ref_result[i] - calc_result[i]);
+	}
+	// find average error
+	error /= n;
+	std::cout << "Average Error: " << error << std::endl;
 
 #endif
 
