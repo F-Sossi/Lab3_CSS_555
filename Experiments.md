@@ -18,3 +18,18 @@ n = 8192
 5. n = 8096, 1024 threads per block, 8 blocks
 6. n = 8192, 1024 threads per block, 8 blocks
 7. 128 threads per block, 64 blocks 
+
+
+Part 2 Configurations:
+
+n = 8192
+
+1. 31 threads per block, 253 blocks
+2. 32 threads per block, 256 blocks
+3.5 128 threads per block, 64 blocks 
+
+Higher threads/block did not compute or profile correctly and were excluded 
+
+
+Part 3 Configurations:
+... in progress
