@@ -26,10 +26,16 @@ n = 8192
 
 1. 31 threads per block, 253 blocks
 2. 32 threads per block, 256 blocks
-3.5 128 threads per block, 64 blocks 
-
-Higher threads/block did not compute or profile correctly and were excluded 
+3. 500 threads per block, 17 blocks  (tile size 400?)
+4. 1024 threads per block, 8 blocks (tile size = 1024) 
+5. 128 threads per block, 64 blocks 
 
 
 Part 3 Configurations:
-... in progress
+1. 31 threads per block, 253 blocks
+2. 32 threads per block, 256 blocks
+3. 500 threads per block, 17 blocks  (tile size 400?)
+4. 1024 threads per block, 8 blocks (tile size = 1024) 
+5. 128 threads per block, 64 blocks 
+
+Slightly better performance with part 3 vs. part 1. Part 2 shared memory usage seems to slow the matrix-vector multiplication down a little 
