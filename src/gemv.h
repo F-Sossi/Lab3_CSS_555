@@ -36,16 +36,18 @@
 //#define PART1
 #define PART2
 //#define PART3
-#define DEBUG
+//#define DEBUG
 //#define DEBUGINPUT
+//#define DEBUG_KERNEL
+#define VERIFY
 
 // Size of the vector 8000 max for some reason
 // Part 3 is dependent on this value so if this is changed, make sure to inspect and possibly update part 3 kernel
-constexpr int n = 200;
+constexpr int n = 8600;
 // NOTE For further inquiry part 2 over 128 threads per block is not working
 constexpr int THREAD_PER_BLOCK = 500;
 // this is the size of the block 
-constexpr int TILE_SIZE = 1;
+constexpr int TILE_SIZE = 400;
 // Max number of blocks as per spec
 constexpr int max_blocks = 32767;
 
@@ -83,6 +85,9 @@ __global__ void gemv_part2_ver1(const T * matrix, const T * vector, T * result, 
 
     T temp = 0.0;
 
+    #ifdef DEBUGKERNEL
+    printf("thread_index = %d\n", thread_index);
+    #endif
     
     for (unsigned int i = 0; i < ((col + TILE_SIZE - 1)/ TILE_SIZE); ++i)
     {
@@ -110,7 +115,89 @@ __global__ void gemv_part2_ver1(const T * matrix, const T * vector, T * result, 
         result[thread_index] = temp;
     }
 
+    #ifdef DEBUGKERNEL
+    printf("thread_index = %d, result[%d] = %f\n", thread_index, thread_index, result[thread_index]);
+    #endif
 }
+
+///---------------------------------------------------------------------------
+// Function for Shared memeory Matrix Vector Multiplication
+// Input: pointers to matrix, vector, and result vector, matrix dimensions
+// Output: debug info
+//---------------------------------------------------------------------------
+template<typename T>
+__global__ void gemv_part2_ver1_1(const T * matrix, const T * vector, T * result, const unsigned int rows, const unsigned int col)
+{
+    // Compute the thread index
+    const unsigned int thread_index = threadIdx.x + blockIdx.x * blockDim.x;
+
+    // Allocate shared memory for the vector
+    __shared__ T vector_shared[TILE_SIZE];
+
+    // Initialize the temporary sum to zero
+    T temp = 0.0;
+
+#ifdef DEBUG_KERNEL
+    // Print a debug message when a thread starts
+    printf("Thread %d starting\n", thread_index);
+#endif
+
+    // Loop over the columns of the matrix, processing TILE_SIZE columns at a time
+    for (unsigned int i = 0; i < ((col + TILE_SIZE - 1)/ TILE_SIZE); ++i)
+    {
+        // Load a block of the vector into shared memory
+        if ((i * TILE_SIZE + threadIdx.x) <  col) { 
+            vector_shared[threadIdx.x] = vector[threadIdx.x + i * TILE_SIZE];
+        }
+        else{
+            vector_shared[threadIdx.x] = 0.0;
+        }
+            
+        // Wait for all threads to finish loading the vector
+        __syncthreads();
+
+#ifdef DEBUG_KERNEL
+        // Print a debug message showing the contents of the shared vector
+        printf("Thread %d vector_shared[%d] = %f\n", thread_index, threadIdx.x, vector_shared[threadIdx.x]);
+#endif
+
+        // Compute the dot product of the matrix block and the vector block
+        for (unsigned int j = 0; j < TILE_SIZE; ++j) {
+            // Check that the column is within the bounds of the matrix
+            if ((j + TILE_SIZE * i) < col) {
+                // Col ordering
+                temp += matrix[thread_index + (j + TILE_SIZE * i) * rows] * vector_shared[j];
+
+#ifdef DEBUG_KERNEL
+                // Print a debug message showing the computation being performed
+                printf("Thread %d computing temp = %f + %f * %f\n", thread_index, temp, matrix[thread_index + (j + TILE_SIZE * i) * rows], vector_shared[j]);
+#endif
+            }
+        }
+
+        // Wait for all threads to finish the computation
+        __syncthreads();
+
+#ifdef DEBUG_KERNEL
+        // Print a debug message when a loop is completed
+        printf("Thread %d completed loop %d\n", thread_index, i);
+#endif
+    }
+
+    // Store the result in global memory
+    if (thread_index < rows){
+
+        result[thread_index] = temp;
+
+#ifdef DEBUG_KERNEL
+        // Print a debug message showing the result being stored
+        printf("Thread %d completed. result[%d] = %f\n", thread_index, thread_index, result[thread_index]);
+#endif
+    }
+}
+
+
+
 
 ///---------------------------------------------------------------------------
 // Function for Shared memeory Matrix Vector Multiplication incorporates grid 
