@@ -220,7 +220,7 @@ int main() {
 	cudaMemcpy(device_vector2, vector, n * sizeof(double), cudaMemcpyHostToDevice);
 	cudaMemcpy(device_matrix2, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
 
-
+	cudaDeviceSetLimit(cudaLimitMaxRegistersPerThread, 4);
 	const int num_blocks = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
 	//const int max_blocks = 32767;
 	const int blocks = std::min(num_blocks, max_blocks);
