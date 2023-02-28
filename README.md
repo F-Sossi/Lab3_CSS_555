@@ -73,3 +73,13 @@ Note this section: TESTPARAM is all 2's to check basic operation REALDATA is ran
 // Random values for vector and matrix
 #define REALDATA
 
+Using CMake:
+
+1. mkdir build
+2. cd build
+3. cmake ..
+
+to build the project:
+1. cd build
+2. make
+
