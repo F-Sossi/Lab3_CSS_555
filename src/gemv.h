@@ -34,8 +34,8 @@
 
 #define REFERENCE
 //#define PART1
-#define PART2
-//#define PART3
+//#define PART2
+#define PART3
 //#define DEBUG
 //#define DEBUGINPUT
 //#define DEBUG_KERNEL
