@@ -1,3 +1,0 @@
-/home/user/repos/Lab3_CSS_555/build/CMakeFiles/lab3.dir
-/home/user/repos/Lab3_CSS_555/build/CMakeFiles/edit_cache.dir
-/home/user/repos/Lab3_CSS_555/build/CMakeFiles/rebuild_cache.dir
