@@ -126,12 +126,14 @@ int main() {
 		
 #endif
 
-#ifdef PART1
 
 	// allocate pointers to GPU memory
 	double* device_vector2 = nullptr;
 	double* device_matrix2 = nullptr;
 	double* device_result2 = nullptr;
+
+	// get time before allocating memory on GPU
+	auto w_memory_start = get_time();
 
 	cudaMalloc((void**)&device_vector2, n * sizeof(double));
 	cudaMalloc((void**)&device_matrix2, n * n * sizeof(double));
@@ -147,45 +149,24 @@ int main() {
 	const int blocks = std::min(num_blocks, max_blocks);
 	dim3 grid(blocks, 1, 1);
 	dim3 block(THREAD_PER_BLOCK, 1, 1);
+
+	auto wo_memory_start = get_time();
+    
+	// run part 1 Kernel
+	#ifdef PART1
 	gemv_kernel_part1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
-
-
-	cudaDeviceSynchronize();
-	// Copy the result from GPU memory to host memory
-	cudaMemcpy(calc_result, device_result2, n * sizeof(double), cudaMemcpyDeviceToHost);
-
-	cudaFree(device_vector2);
-	cudaFree(device_matrix2);
-	cudaFree(device_result2);
-
-#endif
-
-#ifdef PART2
-
-	// allocate pointers to GPU memory
-	double* device_vector2 = nullptr;
-	double* device_matrix2 = nullptr;
-	double* device_result2 = nullptr;
-
-	cudaMalloc((void**)&device_vector2, n * sizeof(double));
-	cudaMalloc((void**)&device_matrix2, n * n * sizeof(double));
-	cudaMalloc((void**)&device_result2, n * sizeof(double));
-
-	// Copy input data to GPU memory
-	cudaMemcpy(device_vector2, vector, n * sizeof(double), cudaMemcpyHostToDevice);
-	cudaMemcpy(device_matrix2, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
-
-
-	const int num_blocks = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
-	//const int max_blocks = 32767;
-	const int blocks = std::min(num_blocks, max_blocks);
-	//const int block_size = BLOCK_SIZE;
-
-	dim3 grid(blocks, 1, 1);
-	dim3 block(THREAD_PER_BLOCK, 1, 1);
-
+	#endif
+	// run part 2 Kernel
+	#ifdef PART2
 	gemv_part2_ver1_1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
-	
+	#endif
+	// run part 3 Kernel
+	#ifdef PART3
+	gemv_kernel_part3<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+	#endif
+
+	auto wo_memory_end = get_time();
+
 	cudaError_t err = cudaDeviceSynchronize();
 	if (err != cudaSuccess) {
 		printf("Kernel launch failed with error code %d: %s\n", err, cudaGetErrorString(err));
@@ -195,7 +176,7 @@ int main() {
 	if (err != cudaSuccess) {
 		printf("Kernel encountered an error: %d: %s\n", err, cudaGetErrorString(err));
 	}
-
+	
 	// Copy the result from GPU memory to host memory
 	cudaMemcpy(calc_result, device_result2, n * sizeof(double), cudaMemcpyDeviceToHost);
 
@@ -203,41 +184,21 @@ int main() {
 	cudaFree(device_matrix2);
 	cudaFree(device_result2);
 
-#endif
+	auto w_memory_end = get_time();
 
-#ifdef PART3
+	// calculate time for memory allocation
+	auto w_memory_time = std::chrono::duration_cast<std::chrono::nanoseconds>(w_memory_end - w_memory_start).count();
 
-	// allocate pointers to GPU memory
-	double* device_vector2 = nullptr;
-	double* device_matrix2 = nullptr;
-	double* device_result2 = nullptr;
+	// print time for memory allocation
+	std::cout << "Time with memory allocation: " << w_memory_time << std::endl;
 
-	cudaMalloc((void**)&device_vector2, n * sizeof(double));
-	cudaMalloc((void**)&device_matrix2, n * n * sizeof(double));
-	cudaMalloc((void**)&device_result2, n * sizeof(double));
+	// calculate time without memory allocation
+	auto wo_memory_time = std::chrono::duration_cast<std::chrono::nanoseconds>(wo_memory_end - wo_memory_start).count();
 
-	// Copy input data to GPU memory
-	cudaMemcpy(device_vector2, vector, n * sizeof(double), cudaMemcpyHostToDevice);
-	cudaMemcpy(device_matrix2, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
-
-	cudaDeviceSetLimit(cudaLimitMaxRegistersPerThread, 4);
-	const int num_blocks = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
-	//const int max_blocks = 32767;
-	const int blocks = std::min(num_blocks, max_blocks);
-	dim3 grid(blocks, 1, 1);
-	dim3 block(THREAD_PER_BLOCK, 1, 1);
-	gemv_kernel_part3<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+	// print time without memory allocation
+	std::cout << "Time without memory allocation: " << wo_memory_time << std::endl;
 
 
-	cudaDeviceSynchronize();
-	// Copy the result from GPU memory to host memory
-	cudaMemcpy(calc_result, device_result2, n * sizeof(double), cudaMemcpyDeviceToHost);
-
-	cudaFree(device_vector2);
-	cudaFree(device_matrix2);
-	cudaFree(device_result2);
-
-#endif
 
 #ifdef DEBUG
 
@@ -257,7 +218,7 @@ int main() {
 
 #endif
 
-#ifdef VERIFY
+#ifdef REFERENCE
 
 	// verify the result
 	double error = 0.0;
