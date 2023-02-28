@@ -5,7 +5,7 @@ OBJECTS = kernel.o
 all: kernel.o lab3
 
 CC      = nvcc
-CFLAGS  = -I. -g -G -arch=sm_86 -lcublas kernel.cu -o lab3
+CFLAGS  = -I. -g -G -arch=sm_86 -lcublas kernel.cu
 DEPS    = kernel.cu
 
 %.o: %.cu $(DEPS)
