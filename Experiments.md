@@ -14,7 +14,7 @@ Threads per block, number of blocks, n, time with memory allocation (nanoseconds
 1. 31 threads per block, 253 blocks, 8192, 291871300, 39000
 2. 20 threads per block, 410 blocks, 8192, 297227100, 23700
 3. 32 threads per block, 256 blocks, 8192, 292321800, 20600
-4. 500 threads per block, 17 blocks, 8192, 226543100, 16800 \n
+4. 500 threads per block, 17 blocks, 8192, 226543100, 16800 <br />
 exp 4.5. 512 threads per block, 16 blocks, 8192, 299462500, 19000
 5. n = 8096, 1024 threads per block, 8 blocks - excluded from timing because n is different  
 6. n = 8192, 1024 threads per block, 8 blocks, 8192, 282626900, 16500
