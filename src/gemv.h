@@ -33,9 +33,9 @@
 
 
 #define REFERENCE
-//#define PART1
+#define PART1
 //#define PART2
-#define PART3
+//#define PART3
 //#define DEBUG
 //#define DEBUGINPUT
 //#define DEBUG_KERNEL
@@ -43,7 +43,7 @@
 
 // Size of the vector 8000 max for some reason
 // Part 3 is dependent on this value so if this is changed, make sure to inspect and possibly update part 3 kernel
-constexpr int n = 10000;
+constexpr int n = 30000;
 // NOTE For further inquiry part 2 over 128 threads per block is not working
 constexpr int THREAD_PER_BLOCK = 128;
 // this is the size of the block 
