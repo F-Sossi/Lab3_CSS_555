@@ -21,7 +21,6 @@
 #include "device_launch_parameters.h"
 #include "gemv.h"
 
-
 int main()
 {
 
@@ -41,12 +40,14 @@ int main()
             quit = true;
             continue;
         }
+
         while (!(std::stringstream(input) >> n) || n >= MAX_NUM)
         {
             std::cout << "Invalid input. Please enter the value of n (less than " << MAX_NUM << "), or 'q' to quit: ";
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cin >> input;
+
             if (input == "q")
             {
                 quit = true;
@@ -153,18 +154,18 @@ int main()
         double* ref_result = (double*)malloc(n * sizeof(double));
         double* calc_result = (double*)malloc(n * sizeof(double));
 
-        // random number generator
+        // Random number generator
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(0, 2);
 
-        // fill vector with random numbers
+        // Fill the vector with random numbers
         for (int i = 0; i < n; i++)
         {
             vector[i] = dis(gen);
         }
 
-        // fill matrix with random numbers
+        // Fill the matrix with random numbers
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < n; j++)
@@ -173,12 +174,12 @@ int main()
             }
         }
 
-        // allocate pointers to GPU memory
+        // Allocate pointers to GPU memory
         double* device_vector2 = nullptr;
         double* device_matrix2 = nullptr;
         double* device_result2 = nullptr;
 
-        // get time before allocating memory on GPU
+        // Get time before allocating memory on GPU
         auto w_memory_start = get_time();
 
         cudaMalloc((void**)&device_vector2, n * sizeof(double));
@@ -188,7 +189,6 @@ int main()
         // Copy input data to GPU memory
         cudaMemcpy(device_vector2, vector, n * sizeof(double), cudaMemcpyHostToDevice);
         cudaMemcpy(device_matrix2, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
-
 
         const int NUM_BLOCKS = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
         const int BLOCKS = std::min(NUM_BLOCKS, MAX_BLOCKS);
@@ -217,6 +217,7 @@ int main()
         auto wo_memory_end = get_time();
 
         cudaError_t err = cudaDeviceSynchronize();
+        
         if (err != cudaSuccess)
         {
             printf("Kernel launch failed with error code %d: %s\n", err, cudaGetErrorString(err));
