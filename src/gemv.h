@@ -1,36 +1,41 @@
 //---------------------------------------------------------------------------
 // gemv.h
 // Author: Frank Sossi
-// 
-// File contains: 
-//		- gemv_kernel_part1_ver1() - Function for Naive Matrix Vector Multiplication
-//		- gemv_part2_ver1() - Function for Shared memeory Matrix Vector Multiplication
-//		- gemv_kernel_part3_ver1() - Function for Registers Matrix Vector Multiplication
+//
+// File contains:
+//		- gemv_kernel_part1_ver1() - Function for Naive Matrix Vector
+// Multiplication
+//		- gemv_part2_ver1() - Function for Shared memeory Matrix Vector
+// Multiplication
+//		- gemv_kernel_part3_ver1() - Function for Registers Matrix
+// Vector Multiplication
 //		- get_time() - Function to return time
 //		- add_grid() - Kernel function to add two vectors
-//		- add_block() - Kernel function to add two vectors for use with specified blocks
-//		- add_thread() - Kernel function to add two vectors for use with specified blocks
-//		- random_int() - Function to generate random integers
+//		- add_block() - Kernel function to add two vectors for use with
+// specified blocks
+//		- add_thread() - Kernel function to add two vectors for use
+// with
+// specified blocks
+//		- Random_int() - Function to generate random integers
 //		- Function for Shared memeory Matrix Vector Multiplication
 //		- Function to return time
 //		- Kernel function to add two vectors
-// 
+//
 //---------------------------------------------------------------------------
 #pragma once
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include <math.h>
-#include <stdio.h>
-#include <fstream>
 #include <chrono>
+#include <fstream>
+#include <math.h>
 #include <random>
+#include <stdio.h>
 
 // NOTE: one but not both of these should be defined
-// Test parameters all 2's to check 
+// Test parameters all 2's to check
 //#define TESTPARAM
 // Random values for vector and matrix
 #define REALDATA
-
 
 //#define REFERENCE
 //#define PART1
@@ -42,11 +47,11 @@
 //#define VERIFY
 
 // Size of the vector 8000 max for some reason
-// Part 3 is dependent on this value so if this is changed, make sure to inspect and possibly update part 3 kernel
-//constexpr int n = 10000;
-// NOTE For further inquiry part 2 over 128 threads per block is not working
+// Part 3 is dependent on this value so if this is changed, make sure to
+// inspect and possibly update part 3 kernel constexpr int n = 10000; NOTE For
+// further inquiry part 2 over 128 threads per block is not working
 const int MAX_NUM = 20000;
-// this is the size of the block 
+// this is the size of the block
 constexpr int TILE_SIZE = 31;
 // Max number of blocks as per spec
 constexpr int max_blocks = 32767;
@@ -57,15 +62,20 @@ constexpr int max_blocks = 32767;
 //        without fma
 // Output: none
 //---------------------------------------------------------------------------
-template<typename T>
-__global__ void gemv_kernel_part1(const T* matrix, const T* vector, T* result, const int row, const int col) {
+template <typename T>
+__global__ void
+gemv_kernel_part1(
+    const T *matrix, const T *vector, T *result, const int row, const int col)
+{
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < row) {
-        
+    if (i < row)
+    {
         T sum = 0.0;
-        
-        for (int j = 0; j < col; j++) {
-            sum += matrix[j * row + i] * vector[j]; // multiply and accumulate with row-major ordering
+
+        for (int j = 0; j < col; j++)
+        {
+            sum += matrix[j * row + i] * vector[j]; // multiply and accumulate
+                                                    // with row-major ordering
         }
         result[i] = sum;
     }
@@ -76,8 +86,13 @@ __global__ void gemv_kernel_part1(const T* matrix, const T* vector, T* result, c
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
 // Output: none
 //---------------------------------------------------------------------------
-template<typename T>
-__global__ void gemv_part2_ver1(const T * matrix, const T * vector, T * result, const unsigned int rows, const unsigned int col)
+template <typename T>
+__global__ void
+gemv_part2_ver1(const T *matrix,
+                const T *vector,
+                T *result,
+                const unsigned int rows,
+                const unsigned int col)
 {
     const unsigned int thread_index = threadIdx.x + blockIdx.x * blockDim.x;
 
@@ -86,39 +101,42 @@ __global__ void gemv_part2_ver1(const T * matrix, const T * vector, T * result, 
 
     T temp = 0.0;
 
-    #ifdef DEBUGKERNEL
+#ifdef DEBUGKERNEL
     printf("thread_index = %u\n", thread_index);
-    #endif
-    
-    for (unsigned int i = 0; i < ((col + TILE_SIZE - 1)/ TILE_SIZE); ++i)
+#endif
+
+    for (unsigned int i = 0; i < ((col + TILE_SIZE - 1) / TILE_SIZE); ++i)
     {
-        if ((i * TILE_SIZE + threadIdx.x) <  col) { 
+        if ((i * TILE_SIZE + threadIdx.x) < col)
+        {
             vector_shared[threadIdx.x] = vector[threadIdx.x + i * TILE_SIZE];
         }
-        else{
+        else
+        {
             vector_shared[threadIdx.x] = 0.0;
         }
-            
+
         __syncthreads();
 
-
-        for (unsigned int j = 0; j < TILE_SIZE; ++j) {
+        for (unsigned int j = 0; j < TILE_SIZE; ++j)
+        {
             // Col ordering
-            temp += matrix[thread_index + (j + TILE_SIZE * i) * rows] * vector_shared[j];
-
+            temp += matrix[thread_index + (j + TILE_SIZE * i) * rows]
+                    * vector_shared[j];
         }
 
         __syncthreads();
     }
 
-    if (thread_index < rows){
-
+    if (thread_index < rows)
+    {
         result[thread_index] = temp;
     }
 
-    #ifdef DEBUGKERNEL
-    printf("thread_index = %u, result[%u] = %f\n", thread_index, thread_index, result[thread_index]);
-    #endif
+#ifdef DEBUGKERNEL
+    printf("thread_index = %u, result[%u] = %f\n", thread_index, thread_index,
+           result[thread_index]);
+#endif
 }
 
 ///---------------------------------------------------------------------------
@@ -126,8 +144,13 @@ __global__ void gemv_part2_ver1(const T * matrix, const T * vector, T * result, 
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
 // Output: debug info
 //---------------------------------------------------------------------------
-template<typename T>
-__global__ void gemv_part2_ver1_1(const T * matrix, const T * vector, T * result, const unsigned int rows, const unsigned int col)
+template <typename T>
+__global__ void
+gemv_part2_ver1_1(const T *matrix,
+                  const T *vector,
+                  T *result,
+                  const unsigned int rows,
+                  const unsigned int col)
 {
     // Compute the thread index
     const unsigned int thread_index = threadIdx.x + blockIdx.x * blockDim.x;
@@ -143,35 +166,46 @@ __global__ void gemv_part2_ver1_1(const T * matrix, const T * vector, T * result
     printf("Thread %u starting\n", thread_index);
 #endif
 
-    // Loop over the columns of the matrix, processing TILE_SIZE columns at a time
-    for (unsigned int i = 0; i < ((col + TILE_SIZE - 1)/ TILE_SIZE); ++i)
+    // Loop over the columns of the matrix, processing TILE_SIZE columns at a
+    // time
+    for (unsigned int i = 0; i < ((col + TILE_SIZE - 1) / TILE_SIZE); ++i)
     {
         // Load a block of the vector into shared memory
-        if ((i * TILE_SIZE + threadIdx.x) <  col) { 
+        if ((i * TILE_SIZE + threadIdx.x) < col)
+        {
             vector_shared[threadIdx.x] = vector[threadIdx.x + i * TILE_SIZE];
         }
-        else{
+        else
+        {
             vector_shared[threadIdx.x] = 0.0;
         }
-            
+
         // Wait for all threads to finish loading the vector
         __syncthreads();
 
 #ifdef DEBUG_KERNEL
         // Print a debug message showing the contents of the shared vector
-        printf("Thread %u vector_shared[%u] = %f\n", thread_index, threadIdx.x, vector_shared[threadIdx.x]);
+        printf("Thread %u vector_shared[%u] = %f\n", thread_index, threadIdx.x,
+               vector_shared[threadIdx.x]);
 #endif
 
         // Compute the dot product of the matrix block and the vector block
-        for (unsigned int j = 0; j < TILE_SIZE; ++j) {
+        for (unsigned int j = 0; j < TILE_SIZE; ++j)
+        {
             // Check that the column is within the bounds of the matrix
-            if ((j + TILE_SIZE * i) < col) {
+            if ((j + TILE_SIZE * i) < col)
+            {
                 // Col ordering
-                temp += matrix[thread_index + (j + TILE_SIZE * i) * rows] * vector_shared[j];
+                temp += matrix[thread_index + (j + TILE_SIZE * i) * rows]
+                        * vector_shared[j];
 
 #ifdef DEBUG_KERNEL
-                // Print a debug message showing the computation being performed
-                printf("Thread %u computing temp = %f + %f * %f\n", thread_index, temp, matrix[thread_index + (j + TILE_SIZE * i) * rows], vector_shared[j]);
+                // Print a debug message showing the computation being
+                // performed
+                printf("Thread %u computing temp = %f + %f * %f\n",
+                       thread_index, temp,
+                       matrix[thread_index + (j + TILE_SIZE * i) * rows],
+                       vector_shared[j]);
 #endif
             }
         }
@@ -186,28 +220,31 @@ __global__ void gemv_part2_ver1_1(const T * matrix, const T * vector, T * result
     }
 
     // Store the result in global memory
-    if (thread_index < rows){
-
+    if (thread_index < rows)
+    {
         result[thread_index] = temp;
 
 #ifdef DEBUG_KERNEL
         // Print a debug message showing the result being stored
-        printf("Thread %u completed. result[%u] = %f\n", thread_index, thread_index, result[thread_index]);
+        printf("Thread %u completed. result[%u] = %f\n", thread_index,
+               thread_index, result[thread_index]);
 #endif
     }
 }
 
-
-
-
 ///---------------------------------------------------------------------------
-// Function for Shared memeory Matrix Vector Multiplication incorporates grid 
+// Function for Shared memeory Matrix Vector Multiplication incorporates grid
 //      stride loop
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
 // Output: none
 //---------------------------------------------------------------------------
-template<typename T>
-__global__ void gemv_part2_ver2(const T * matrix, const T * vector, T * result, const unsigned int rows, const unsigned int col)
+template <typename T>
+__global__ void
+gemv_part2_ver2(const T *matrix,
+                const T *vector,
+                T *result,
+                const unsigned int rows,
+                const unsigned int col)
 {
     // Calculate the thread index
     const unsigned int thread_index = threadIdx.x + blockIdx.x * blockDim.x;
@@ -221,34 +258,42 @@ __global__ void gemv_part2_ver2(const T * matrix, const T * vector, T * result, 
     T temp = 0.0;
 
     // Iterate over the rows of the matrix using a grid-stride loop
-    for (unsigned int row = thread_index; row < rows; row += stride) {
-
+    for (unsigned int row = thread_index; row < rows; row += stride)
+    {
         // Iterate over the columns of the matrix using the existing loop code
-        for (unsigned int i = 0; i < ((col + TILE_SIZE - 1)/ TILE_SIZE); ++i)
+        for (unsigned int i = 0; i < ((col + TILE_SIZE - 1) / TILE_SIZE); ++i)
         {
             // Load a subset of the vector into shared memory
-            if ((i * TILE_SIZE + threadIdx.x) <  col) { 
-                vector_shared[threadIdx.x] = vector[threadIdx.x + i * TILE_SIZE];
+            if ((i * TILE_SIZE + threadIdx.x) < col)
+            {
+                vector_shared[threadIdx.x]
+                    = vector[threadIdx.x + i * TILE_SIZE];
             }
-            else{
+            else
+            {
                 vector_shared[threadIdx.x] = 0.0;
             }
 
-            // Synchronize threads to ensure all data is loaded into shared memory
+            // Synchronize threads to ensure all data is loaded into shared
+            // memory
             __syncthreads();
 
             // Compute the dot product of the matrix and the vector subset
-            for (unsigned int j = 0; j < TILE_SIZE; ++j) {
+            for (unsigned int j = 0; j < TILE_SIZE; ++j)
+            {
                 // Col ordering
-                temp += matrix[row + (j + TILE_SIZE * i) * rows] * vector_shared[j];
+                temp += matrix[row + (j + TILE_SIZE * i) * rows]
+                        * vector_shared[j];
             }
 
-            // Synchronize threads to ensure all data is used before modifying shared memory
+            // Synchronize threads to ensure all data is used before modifying
+            // shared memory
             __syncthreads();
         }
 
         // Store the result for the current row in global memory
-        if (thread_index < rows){
+        if (thread_index < rows)
+        {
             result[row] = temp;
             // Reset the temporary variable to zero for the next row
             temp = 0.0;
@@ -257,61 +302,78 @@ __global__ void gemv_part2_ver2(const T * matrix, const T * vector, T * result, 
 }
 
 ///---------------------------------------------------------------------------
-// Function for Shared memeory Matrix Vector Multiplication incorporates grid 
+// Function for Shared memeory Matrix Vector Multiplication incorporates grid
 //      stride loop and more efficient memory access caching both matrix and
 //      vector in shared memory
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
 // Output: none
 //---------------------------------------------------------------------------
 
-template<typename T>
-__global__ void gemv_part2_ver3(const T * matrix, const T * vector, T * result, const unsigned int rows, const unsigned int col)
+template <typename T>
+__global__ void
+gemv_part2_ver3(const T *matrix,
+                const T *vector,
+                T *result,
+                const unsigned int rows,
+                const unsigned int col)
 {
     const unsigned int thread_index = threadIdx.x + blockIdx.x * blockDim.x;
-    const unsigned int stride = gridDim.x * blockDim.x;
+    const unsigned int stride       = gridDim.x * blockDim.x;
 
     __shared__ T matrix_shared[TILE_SIZE * TILE_SIZE];
     __shared__ T vector_shared[TILE_SIZE];
 
     T temp = 0.0;
 
-    for (unsigned int row = thread_index; row < rows; row += stride) {
-
-        for (unsigned int i = 0; i < ((col + TILE_SIZE - 1)/ TILE_SIZE); ++i)
+    for (unsigned int row = thread_index; row < rows; row += stride)
+    {
+        for (unsigned int i = 0; i < ((col + TILE_SIZE - 1) / TILE_SIZE); ++i)
         {
             // Load a block of the matrix into shared memory
-            for (unsigned int j = threadIdx.x; j < TILE_SIZE; j += blockDim.x) {
-                matrix_shared[threadIdx.x * TILE_SIZE + j] = matrix[(i * TILE_SIZE + j) * rows + row];
+            for (unsigned int j = threadIdx.x; j < TILE_SIZE; j += blockDim.x)
+            {
+                matrix_shared[threadIdx.x * TILE_SIZE + j]
+                    = matrix[(i * TILE_SIZE + j) * rows + row];
             }
 
             // Load a block of the vector into shared memory
-            if (threadIdx.x == 0) {
-                for (unsigned int j = 0; j < TILE_SIZE; j++) {
-                    if (i * TILE_SIZE + j < col) {
+            if (threadIdx.x == 0)
+            {
+                for (unsigned int j = 0; j < TILE_SIZE; j++)
+                {
+                    if (i * TILE_SIZE + j < col)
+                    {
                         vector_shared[j] = vector[i * TILE_SIZE + j];
-                    } else {
+                    }
+                    else
+                    {
                         vector_shared[j] = 0.0;
                     }
                 }
             }
 
-            // Synchronize threads to ensure all data is loaded into shared memory
+            // Synchronize threads to ensure all data is loaded into shared
+            // memory
             __syncthreads();
 
             // Compute the dot product of the matrix and the vector block
-            for (unsigned int j = 0; j < TILE_SIZE; ++j) {
+            for (unsigned int j = 0; j < TILE_SIZE; ++j)
+            {
                 // Row ordering
-                temp += matrix_shared[threadIdx.x * TILE_SIZE + j] * vector_shared[j];
+                temp += matrix_shared[threadIdx.x * TILE_SIZE + j]
+                        * vector_shared[j];
             }
 
-            // Synchronize threads to ensure all data is used before modifying shared memory
+            // Synchronize threads to ensure all data is used before modifying
+            // shared memory
             __syncthreads();
         }
 
         // Store the result for the current row in global memory
-        if (thread_index < rows){
+        if (thread_index < rows)
+        {
             result[row] = temp;
-            temp = 0.0;
+            temp        = 0.0;
         }
     }
 }
@@ -322,15 +384,19 @@ __global__ void gemv_part2_ver3(const T * matrix, const T * vector, T * result, 
 // Output: none
 //---------------------------------------------------------------------------
 
-template<typename T>
-__global__ void gemv_kernel_part3(const T* matrix, const T* vector, T* result, const int row, const int col) {
+template <typename T>
+__global__ void
+gemv_kernel_part3(
+    const T *matrix, const T *vector, T *result, const int row, const int col)
+{
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < row) {
-        
+    if (i < row)
+    {
         T sum = 0.0;
-        
+
         int j = 0;
-        for (; j < col - 7; j += 8) {
+        for (; j < col - 7; j += 8)
+        {
             sum += matrix[j * row + i] * vector[j];
             sum += matrix[(j + 1) * row + i] * vector[(j + 1)];
             sum += matrix[(j + 2) * row + i] * vector[(j + 2)];
@@ -340,28 +406,24 @@ __global__ void gemv_kernel_part3(const T* matrix, const T* vector, T* result, c
             sum += matrix[(j + 6) * row + i] * vector[(j + 6)];
             sum += matrix[(j + 7) * row + i] * vector[(j + 7)];
         }
-        for (; j < col; j++) {
+        for (; j < col; j++)
+        {
             sum += matrix[j * row + i] * vector[j];
         }
         result[i] = sum;
     }
 }
 
-
-
-
-
-
 //---------------------------------------------------------------------------
 // Function to return time
 // Input: none
 // Output: returns time in nanoseconds
 //---------------------------------------------------------------------------
-std::chrono::high_resolution_clock::time_point get_time() {
-  return std::chrono::high_resolution_clock::now();
+std::chrono::high_resolution_clock::time_point
+get_time()
+{
+    return std::chrono::high_resolution_clock::now();
 }
-
-
 
 //---------------------------------------------------------------------------
 // Function write timing data to a file
@@ -369,19 +431,23 @@ std::chrono::high_resolution_clock::time_point get_time() {
 // Output: results.csv
 //---------------------------------------------------------------------------
 template <typename T>
-void write_data(std::vector<T> w_memory, std::vector<T> wo_memory, std::vector<int> size, int blocks, int threads) {
+void
+write_data(std::vector<T> w_memory,
+           std::vector<T> wo_memory,
+           std::vector<int> size,
+           int blocks,
+           int threads)
+{
     std::ofstream file("results.csv", std::ios::app);
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         std::cerr << "Failed to open file for writing." << std::endl;
         return;
     }
 
-
-    for (int i = 0; i < w_memory.size(); i++) {
-        file << blocks << "," << threads << "," << size[i] << "," 
-			<< w_memory[i] << "," << wo_memory[i] << std::endl;
+    for (int i = 0; i < w_memory.size(); i++)
+    {
+        file << blocks << "," << threads << "," << size[i] << ","
+             << w_memory[i] << "," << wo_memory[i] << std::endl;
     }
 }
-
-
-
