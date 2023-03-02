@@ -33,18 +33,7 @@
 
 // NOTE: one but not botmakeh of these should be defined
 // Test parameters all 2's to check
-// #define TESTPARAM
 // Random values for vector and matrix
-#define REALDATA
-
-// #define REFERENCE
-// #define PART1
-// #define PART2
-// #define PART3
-// #define DEBUG
-// #define DEBUGINPUT
-// #define DEBUG_KERNEL
-// #define VERIFY
 
 // Size of the vector 8000 max for some reason
 // Part 3 is dependent on this value so if this is changed, make sure to
@@ -56,7 +45,7 @@ const int MAX_NUM = 20000;
 constexpr int TILE_SIZE = 1024;
 
 // Max number of blocks as per spec
-constexpr int max_blocks = 32767;
+constexpr int MAX_BLOCKS = 32767;
 
 //---------------------------------------------------------------------------
 // Function for Naive Matrix Vector Multiplication #WORKs
