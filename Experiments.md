@@ -26,11 +26,11 @@ Part 2 Configurations:
 n = 8192
 --- no timing performed, error in part2 ver1_1 kernel ---
 Threads per block, number of blocks, n, time with memory allocation (nanoseconds), time without memory allocation (nanoseconds)
-1. 31 threads per block, 253 blocks, 8192, 
-2. 32 threads per block, 256 blocks
-3. 500 threads per block, 17 blocks  (tile size 400?)
-4. 1024 threads per block, 8 blocks (tile size = 1024) 
-5. 128 threads per block, 64 blocks 
+1. 31 threads per block, 253 blocks, 8192, 333899600, 16100
+2. 32 threads per block, 256 blocks, 8192, 223376400, 19300
+3. 500 threads per block, 17 blocks, 8192, 238844500, 15100
+4. 1024 threads per block, 8 blocks, 8192, 310022500, 16300
+5. 128 threads per block, 64 blocks, 8192, 264064100, 16500
 
 
 Part 3 Configurations:
