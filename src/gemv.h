@@ -47,7 +47,7 @@
 // NOTE For further inquiry part 2 over 128 threads per block is not working
 const int MAX_NUM = 20000;
 // this is the size of the block 
-constexpr int TILE_SIZE = 31;
+constexpr int TILE_SIZE = 32;
 // Max number of blocks as per spec
 constexpr int max_blocks = 32767;
 
@@ -127,7 +127,7 @@ __global__ void gemv_part2_ver1(const T * matrix, const T * vector, T * result, 
 // Output: debug info
 //---------------------------------------------------------------------------
 template<typename T>
-__global__ void gemv_part2_ver1_1(const T * matrix, const T * vector, T * result, const unsigned int rows, const unsigned int col)
+__global__ void gemv_part2_ver2(const T * matrix, const T * vector, T * result, const unsigned int rows, const unsigned int col)
 {
     // Compute the thread index
     const unsigned int thread_index = threadIdx.x + blockIdx.x * blockDim.x;
@@ -206,55 +206,55 @@ __global__ void gemv_part2_ver1_1(const T * matrix, const T * vector, T * result
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
 // Output: none
 //---------------------------------------------------------------------------
-template<typename T>
-__global__ void gemv_part2_ver2(const T * matrix, const T * vector, T * result, const unsigned int rows, const unsigned int col)
-{
-    // Calculate the thread index
-    const unsigned int thread_index = threadIdx.x + blockIdx.x * blockDim.x;
-    // Calculate the stride between threads
-    const unsigned int stride = gridDim.x * blockDim.x;
+// template<typename T>
+// __global__ void gemv_part2_ver2(const T * matrix, const T * vector, T * result, const unsigned int rows, const unsigned int col)
+// {
+//     // Calculate the thread index
+//     const unsigned int thread_index = threadIdx.x + blockIdx.x * blockDim.x;
+//     // Calculate the stride between threads
+//     const unsigned int stride = gridDim.x * blockDim.x;
 
-    // Allocate shared memory for the vector
-    __shared__ T vector_shared[TILE_SIZE];
+//     // Allocate shared memory for the vector
+//     __shared__ T vector_shared[TILE_SIZE];
 
-    // Initialize the temporary variable to zero
-    T temp = 0.0;
+//     // Initialize the temporary variable to zero
+//     T temp = 0.0;
 
-    // Iterate over the rows of the matrix using a grid-stride loop
-    for (unsigned int row = thread_index; row < rows; row += stride) {
+//     // Iterate over the rows of the matrix using a grid-stride loop
+//     for (unsigned int row = thread_index; row < rows; row += stride) {
 
-        // Iterate over the columns of the matrix using the existing loop code
-        for (unsigned int i = 0; i < ((col + TILE_SIZE - 1)/ TILE_SIZE); ++i)
-        {
-            // Load a subset of the vector into shared memory
-            if ((i * TILE_SIZE + threadIdx.x) <  col) { 
-                vector_shared[threadIdx.x] = vector[threadIdx.x + i * TILE_SIZE];
-            }
-            else{
-                vector_shared[threadIdx.x] = 0.0;
-            }
+//         // Iterate over the columns of the matrix using the existing loop code
+//         for (unsigned int i = 0; i < ((col + TILE_SIZE - 1)/ TILE_SIZE); ++i)
+//         {
+//             // Load a subset of the vector into shared memory
+//             if ((i * TILE_SIZE + threadIdx.x) <  col) { 
+//                 vector_shared[threadIdx.x] = vector[threadIdx.x + i * TILE_SIZE];
+//             }
+//             else{
+//                 vector_shared[threadIdx.x] = 0.0;
+//             }
 
-            // Synchronize threads to ensure all data is loaded into shared memory
-            __syncthreads();
+//             // Synchronize threads to ensure all data is loaded into shared memory
+//             __syncthreads();
 
-            // Compute the dot product of the matrix and the vector subset
-            for (unsigned int j = 0; j < TILE_SIZE; ++j) {
-                // Col ordering
-                temp += matrix[row + (j + TILE_SIZE * i) * rows] * vector_shared[j];
-            }
+//             // Compute the dot product of the matrix and the vector subset
+//             for (unsigned int j = 0; j < TILE_SIZE; ++j) {
+//                 // Col ordering
+//                 temp += matrix[row + (j + TILE_SIZE * i) * rows] * vector_shared[j];
+//             }
 
-            // Synchronize threads to ensure all data is used before modifying shared memory
-            __syncthreads();
-        }
+//             // Synchronize threads to ensure all data is used before modifying shared memory
+//             __syncthreads();
+//         }
 
-        // Store the result for the current row in global memory
-        if (thread_index < rows){
-            result[row] = temp;
-            // Reset the temporary variable to zero for the next row
-            temp = 0.0;
-        }
-    }
-}
+//         // Store the result for the current row in global memory
+//         if (thread_index < rows){
+//             result[row] = temp;
+//             // Reset the temporary variable to zero for the next row
+//             temp = 0.0;
+//         }
+//     }
+// }
 
 ///---------------------------------------------------------------------------
 // Function for Shared memeory Matrix Vector Multiplication incorporates grid 

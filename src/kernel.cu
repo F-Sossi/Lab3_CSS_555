@@ -210,17 +210,17 @@ int main() {
 		auto wo_memory_start = get_time();
 
 		switch (part_to_run) {
-		case 1:
-		gemv_kernel_part1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
-		break;
-		case 2:
-		gemv_part2_ver1_1<<<grid, block, THREAD_PER_BLOCK>>>(device_matrix2, device_vector2, device_result2, n, n);
-		break;
-		case 3:
-		gemv_kernel_part3<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
-		break;
-		default:
-		std::cerr << "Invalid part to run" << std::endl;
+			case 1:
+			gemv_kernel_part1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+			break;
+			case 2:
+				gemv_part2_ver2<<<grid, block, THREAD_PER_BLOCK>>>(device_matrix2, device_vector2, device_result2, n, n);
+			break;
+			case 3:
+			gemv_kernel_part3<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+			break;
+			default:
+			std::cerr << "Invalid part to run" << std::endl;
 		return 1;
 		}
 
