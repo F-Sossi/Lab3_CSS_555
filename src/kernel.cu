@@ -60,11 +60,13 @@ int main()
 
         std::cout << "Enter the number of threads per block, or 'q' to quit: ";
         std::cin >> input;
+        
         if (input == "q")
         {
             quit = true;
             continue;
         }
+
         while (!(std::stringstream(input) >> THREAD_PER_BLOCK))
         {
             std::cout << "Invalid input. Please enter the number of threads per block less than, or 'q' to quit: ";
@@ -77,6 +79,7 @@ int main()
                 break;
             }
         }
+
         if (quit)
         {
             break;
@@ -84,84 +87,71 @@ int main()
 
         std::cout << "Do you want to check reference? (y/n), or 'q' to quit: ";
         std::cin >> input;
+
         if (input == "q")
         {
             quit = true;
             continue;
         }
+
         while (input != "y" && input != "n")
         {
             std::cout << "Invalid input. Please enter 'y' or 'n' for whether you want to check reference, or 'q' to quit: ";
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cin >> input;
+
             if (input == "q")
             {
                 quit = true;
                 break;
             }
         }
+
         if (quit)
         {
             break;
         }
+
         want_reference = input;
 
         std::cout << "Which part do you want to run? (1/2/3), or 'q' to quit: ";
         std::cin >> input;
+
         if (input == "q")
         {
             quit = true;
             continue;
         }
+
         while (!(std::stringstream(input) >> part_to_run) || part_to_run < 1 || part_to_run > 3)
         {
             std::cout << "Invalid input. Please enter 1, 2, or 3 for which part to run, or 'q' to quit: ";
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cin >> input;
+
             if (input == "q")
             {
                 quit = true;
                 break;
             }
         }
+
         if (quit)
         {
             break;
         }
 
-        // vectors to hold timing data
+        // Vectors to hold timing data
         std::vector<long long> execution_w_memory;
         std::vector<long long> execution_wo_memory;
-
 
         // Allocate memory for each vector on host
         double* vector = (double*)malloc(n * sizeof(double));
         double* matrix = (double*)malloc(n * n * sizeof(double));
         double* ref_result = (double*)malloc(n * sizeof(double));
         double* calc_result = (double*)malloc(n * sizeof(double));
-
-#ifdef TESTPARAM
-
-        // fill vector with 2's
-        for (int i = 0; i < n; i++)
-        {
-            vector[i] = 2;
-        }
-
-        // fill matrix with 2's
-        for (int i = 0; i < n; i++)
-        {
-            for (int j = 0; j < n; j++)
-            {
-                matrix[i * n + j] = 2;
-            }
-        }
-
-#endif
-
-#ifdef REALDATA
 
         // random number generator
         std::random_device rd;
@@ -183,34 +173,6 @@ int main()
             }
         }
 
-#endif
-
-#ifdef DEBUGINPUT
-
-        // print vector
-        std::cout << "Vector" << std::endl;
-        for (int i = 0; i < n; i++)
-        {
-            std::cout << vector[i] << " ";
-        }
-        std::cout << std::endl;
-
-        // print matrix
-        std::cout << "Matrix" << std::endl;
-        for (int i = 0; i < n; i++)
-        {
-            for (int j = 0; j < n; j++)
-            {
-                std::cout << matrix[i * n + j] << " ";
-            }
-            std::cout << std::endl;
-        }
-
-#endif
-
-
-
-
         // allocate pointers to GPU memory
         double* device_vector2 = nullptr;
         double* device_matrix2 = nullptr;
@@ -228,10 +190,9 @@ int main()
         cudaMemcpy(device_matrix2, matrix, n * n * sizeof(double), cudaMemcpyHostToDevice);
 
 
-        const int num_blocks = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
-        //const int max_blocks = 32767;
-        const int blocks = std::min(num_blocks, max_blocks);
-        dim3 grid(blocks, 1, 1);
+        const int NUM_BLOCKS = (n + THREAD_PER_BLOCK - 1) / THREAD_PER_BLOCK;
+        const int BLOCKS = std::min(NUM_BLOCKS, MAX_BLOCKS);
+        dim3 grid(BLOCKS,            1, 1);
         dim3 block(THREAD_PER_BLOCK, 1, 1);
 
         auto wo_memory_start = get_time();
@@ -276,48 +237,23 @@ int main()
 
         auto w_memory_end = get_time();
 
-        // calculate time for memory allocation
+        // Calculate time for memory allocation
         auto w_memory_time = std::chrono::duration_cast<std::chrono::nanoseconds>(w_memory_end - w_memory_start).count();
 
-        // print time for memory allocation
+        // Print time for memory allocation
         std::cout << "Time with memory allocation: " << w_memory_time << std::endl;
 
-        // calculate time without memory allocation
+        // Calculate time without memory allocation
         auto wo_memory_time = std::chrono::duration_cast<std::chrono::nanoseconds>(wo_memory_end - wo_memory_start).count();
 
-        // print time without memory allocation
+        // Print time without memory allocation
         std::cout << "Time without memory allocation: " << wo_memory_time << std::endl;
-
-
-
-#ifdef DEBUG
-
-        // print reference result
-        std::cout << "Reference Result" << std::endl;
-        for (int i = 0; i < n; i++)
-        {
-            std::cout << ref_result[i] << " ";
-        }
-        std::cout << std::endl;
-
-        // print calculated result
-        std::cout << "Calculated Result" << std::endl;
-        for (int i = 0; i < n; i++)
-        {
-            std::cout << calc_result[i] << " ";
-        }
-        std::cout << std::endl;
-
-#endif
-
-
 
         if (want_reference == "y")
         {
-            // code to perform reference check
+            // Code to perform reference check
 
-
-            // allocate pointers to GPU memory
+            // Allocate pointers to GPU memory
             double* device_vector = nullptr;
             double* device_matrix = nullptr;
             double* device_result = nullptr;
@@ -361,7 +297,6 @@ int main()
             error /= n;
             std::cout << "Average Error: " << error << std::endl;
         }
-
 
         free(vector);
         free(matrix);
