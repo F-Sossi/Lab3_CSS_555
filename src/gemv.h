@@ -12,10 +12,10 @@
 //		- get_time() - Function to return time
 //		- add_grid() - Kernel function to add two vectors
 //		- add_block() - Kernel function to add two vectors for use with
-// specified blocks
+// Specified blocks
 //		- add_thread() - Kernel function to add two vectors for use
-// with
-// specified blocks
+//with
+// Specified blocks
 //		- Random_int() - Function to generate random integers
 //		- Function for Shared memeory Matrix Vector Multiplication
 //		- Function to return time
@@ -33,26 +33,28 @@
 
 // NOTE: one but not both of these should be defined
 // Test parameters all 2's to check
-//#define TESTPARAM
+// #define TESTPARAM
 // Random values for vector and matrix
 #define REALDATA
 
-//#define REFERENCE
-//#define PART1
-//#define PART2
-//#define PART3
-//#define DEBUG
-//#define DEBUGINPUT
-//#define DEBUG_KERNEL
-//#define VERIFY
+// #define REFERENCE
+// #define PART1
+// #define PART2
+// #define PART3
+// #define DEBUG
+// #define DEBUGINPUT
+// #define DEBUG_KERNEL
+// #define VERIFY
 
 // Size of the vector 8000 max for some reason
 // Part 3 is dependent on this value so if this is changed, make sure to
-// inspect and possibly update part 3 kernel constexpr int n = 10000; NOTE For
-// further inquiry part 2 over 128 threads per block is not working
+// inspect and possibly update part 3 kernel constexpr int n = 10000;
+
 const int MAX_NUM = 20000;
-// this is the size of the block
+
+// This is the size of the block
 constexpr int TILE_SIZE = 31;
+
 // Max number of blocks as per spec
 constexpr int max_blocks = 32767;
 
@@ -234,7 +236,7 @@ gemv_part2_ver1_1(const T *matrix,
 
 ///---------------------------------------------------------------------------
 // Function for Shared memeory Matrix Vector Multiplication incorporates grid
-//      stride loop
+// stride loop
 // Input: pointers to matrix, vector, and result vector, matrix dimensions
 // Output: none
 //---------------------------------------------------------------------------
