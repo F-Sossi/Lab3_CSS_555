@@ -24,10 +24,12 @@
 int main()
 {
 
-    int n = {};
-    int THREAD_PER_BLOCK = {};
+    int n                = 0;
+    int THREAD_PER_BLOCK = 0;
+    int part_to_run      = 0;
+
     std::string want_reference;
-    int part_to_run;
+
     bool quit = false;
 
     while (!quit)
@@ -35,6 +37,7 @@ int main()
         std::cout << "Enter the value of n (less than " << MAX_NUM << "), or 'q' to quit: ";
         std::string input;
         std::cin >> input;
+
         if (input == "q")
         {
             quit = true;
@@ -54,6 +57,7 @@ int main()
                 break;
             }
         }
+
         if (quit)
         {
             break;
@@ -74,6 +78,7 @@ int main()
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cin >> input;
+
             if (input == "q")
             {
                 quit = true;
@@ -149,10 +154,10 @@ int main()
         std::vector<long long> execution_wo_memory;
 
         // Allocate memory for each vector on host
-        double* vector = (double*)malloc(n * sizeof(double));
-        double* matrix = (double*)malloc(n * n * sizeof(double));
-        double* ref_result = (double*)malloc(n * sizeof(double));
-        double* calc_result = (double*)malloc(n * sizeof(double));
+        double* vector      = (double*)malloc(n *     sizeof(double));
+        double* matrix      = (double*)malloc(n * n * sizeof(double));
+        double* ref_result  = (double*)malloc(n *     sizeof(double));
+        double* calc_result = (double*)malloc(n *     sizeof(double));
 
         // Random number generator
         std::random_device rd;
@@ -217,7 +222,7 @@ int main()
         auto wo_memory_end = get_time();
 
         cudaError_t err = cudaDeviceSynchronize();
-        
+
         if (err != cudaSuccess)
         {
             printf("Kernel launch failed with error code %d: %s\n", err, cudaGetErrorString(err));
@@ -274,7 +279,7 @@ int main()
             // Perform the vector-matrix multiplication using cuBLAS
             // Perform the matrix-vector multiplication using cuBLAS
             double alpha = 1.0;
-            double beta = 0.0;
+            double beta  = 0.0;
             cublasDgemv(handle, CUBLAS_OP_N, n, n, &alpha, device_matrix, n, device_vector, 1, &beta, device_result, 1);
 
 
