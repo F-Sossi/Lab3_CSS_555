@@ -87,7 +87,7 @@ __global__ void gemv_part2_ver1(const T * matrix, const T * vector, T * result, 
     T temp = 0.0;
 
     #ifdef DEBUGKERNEL
-    printf("thread_index = %d\n", thread_index);
+    printf("thread_index = %u\n", thread_index);
     #endif
     
     for (unsigned int i = 0; i < ((col + TILE_SIZE - 1)/ TILE_SIZE); ++i)
@@ -117,7 +117,7 @@ __global__ void gemv_part2_ver1(const T * matrix, const T * vector, T * result, 
     }
 
     #ifdef DEBUGKERNEL
-    printf("thread_index = %d, result[%d] = %f\n", thread_index, thread_index, result[thread_index]);
+    printf("thread_index = %u, result[%u] = %f\n", thread_index, thread_index, result[thread_index]);
     #endif
 }
 
@@ -140,7 +140,7 @@ __global__ void gemv_part2_ver1_1(const T * matrix, const T * vector, T * result
 
 #ifdef DEBUG_KERNEL
     // Print a debug message when a thread starts
-    printf("Thread %d starting\n", thread_index);
+    printf("Thread %u starting\n", thread_index);
 #endif
 
     // Loop over the columns of the matrix, processing TILE_SIZE columns at a time
@@ -159,7 +159,7 @@ __global__ void gemv_part2_ver1_1(const T * matrix, const T * vector, T * result
 
 #ifdef DEBUG_KERNEL
         // Print a debug message showing the contents of the shared vector
-        printf("Thread %d vector_shared[%d] = %f\n", thread_index, threadIdx.x, vector_shared[threadIdx.x]);
+        printf("Thread %u vector_shared[%u] = %f\n", thread_index, threadIdx.x, vector_shared[threadIdx.x]);
 #endif
 
         // Compute the dot product of the matrix block and the vector block
@@ -171,7 +171,7 @@ __global__ void gemv_part2_ver1_1(const T * matrix, const T * vector, T * result
 
 #ifdef DEBUG_KERNEL
                 // Print a debug message showing the computation being performed
-                printf("Thread %d computing temp = %f + %f * %f\n", thread_index, temp, matrix[thread_index + (j + TILE_SIZE * i) * rows], vector_shared[j]);
+                printf("Thread %u computing temp = %f + %f * %f\n", thread_index, temp, matrix[thread_index + (j + TILE_SIZE * i) * rows], vector_shared[j]);
 #endif
             }
         }
@@ -181,7 +181,7 @@ __global__ void gemv_part2_ver1_1(const T * matrix, const T * vector, T * result
 
 #ifdef DEBUG_KERNEL
         // Print a debug message when a loop is completed
-        printf("Thread %d completed loop %d\n", thread_index, i);
+        printf("Thread %u completed loop %u\n", thread_index, i);
 #endif
     }
 
@@ -192,7 +192,7 @@ __global__ void gemv_part2_ver1_1(const T * matrix, const T * vector, T * result
 
 #ifdef DEBUG_KERNEL
         // Print a debug message showing the result being stored
-        printf("Thread %d completed. result[%d] = %f\n", thread_index, thread_index, result[thread_index]);
+        printf("Thread %u completed. result[%u] = %f\n", thread_index, thread_index, result[thread_index]);
 #endif
     }
 }
