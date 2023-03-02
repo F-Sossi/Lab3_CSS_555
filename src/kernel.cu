@@ -59,7 +59,7 @@ int main() {
 		continue;
 		}
 		while (!(std::stringstream(input) >> THREAD_PER_BLOCK)) {
-			std::cout << "Invalid input. Please enter the number of threads per block, or 'q' to quit: ";
+			std::cout << "Invalid input. Please enter the number of threads per block less than, or 'q' to quit: ";
 			std::cin.clear();
 			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			std::cin >> input;
@@ -214,7 +214,8 @@ int main() {
 		gemv_kernel_part1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
 		break;
 		case 2:
-		gemv_part2_ver1_1<<<grid, block, THREAD_PER_BLOCK>>>(device_matrix2, device_vector2, device_result2, n, n);
+		gemv_part2_ver1_1<<<grid, block>>>(device_matrix2, device_vector2, 
+		                                                     device_result2, n, n, THREAD_PER_BLOCK);
 		break;
 		case 3:
 		gemv_kernel_part3<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
@@ -320,7 +321,7 @@ int main() {
 			// verify the result
 			double error = 0.0;
 			for (int i = 0; i < n; i++) {
-				error += (ref_result[i] - calc_result[i]);
+				error += abs((ref_result[i] - calc_result[i]));
 			}
 			// find average error
 			error /= n;

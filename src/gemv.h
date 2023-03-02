@@ -31,7 +31,7 @@
 #include <random>
 #include <stdio.h>
 
-// NOTE: one but not both of these should be defined
+// NOTE: one but not botmakeh of these should be defined
 // Test parameters all 2's to check
 // #define TESTPARAM
 // Random values for vector and matrix
@@ -53,7 +53,7 @@
 const int MAX_NUM = 20000;
 
 // This is the size of the block
-constexpr int TILE_SIZE = 31;
+constexpr int TILE_SIZE = 1024;
 
 // Max number of blocks as per spec
 constexpr int max_blocks = 32767;
@@ -152,7 +152,7 @@ gemv_part2_ver1_1(const T *matrix,
                   const T *vector,
                   T *result,
                   const unsigned int rows,
-                  const unsigned int col)
+                  const unsigned int col, const unsigned int threads)
 {
     // Compute the thread index
     const unsigned int thread_index = threadIdx.x + blockIdx.x * blockDim.x;
@@ -170,12 +170,12 @@ gemv_part2_ver1_1(const T *matrix,
 
     // Loop over the columns of the matrix, processing TILE_SIZE columns at a
     // time
-    for (unsigned int i = 0; i < ((col + TILE_SIZE - 1) / TILE_SIZE); ++i)
+    for (unsigned int i = 0; i < ((col + threads - 1) / threads); ++i)
     {
         // Load a block of the vector into shared memory
-        if ((i * TILE_SIZE + threadIdx.x) < col)
+        if ((i * threads + threadIdx.x) < col)
         {
-            vector_shared[threadIdx.x] = vector[threadIdx.x + i * TILE_SIZE];
+            vector_shared[threadIdx.x] = vector[threadIdx.x + i * threads];
         }
         else
         {
@@ -192,13 +192,13 @@ gemv_part2_ver1_1(const T *matrix,
 #endif
 
         // Compute the dot product of the matrix block and the vector block
-        for (unsigned int j = 0; j < TILE_SIZE; ++j)
+        for (unsigned int j = 0; j < threads; ++j)
         {
             // Check that the column is within the bounds of the matrix
-            if ((j + TILE_SIZE * i) < col)
+            if ((j + threads * i) < col)
             {
                 // Col ordering
-                temp += matrix[thread_index + (j + TILE_SIZE * i) * rows]
+                temp += matrix[thread_index + (j + threads * i) * rows]
                         * vector_shared[j];
 
 #ifdef DEBUG_KERNEL
