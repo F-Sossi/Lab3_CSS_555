@@ -214,7 +214,7 @@ int main() {
 		gemv_kernel_part1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
 		break;
 		case 2:
-		gemv_part2_ver1_1<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);
+		gemv_part2_ver1_1<<<grid, block, THREAD_PER_BLOCK>>>(device_matrix2, device_vector2, device_result2, n, n);
 		break;
 		case 3:
 		gemv_kernel_part3<<<grid, block>>>(device_matrix2, device_vector2, device_result2, n, n);

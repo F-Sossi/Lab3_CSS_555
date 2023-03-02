@@ -45,9 +45,9 @@
 // Part 3 is dependent on this value so if this is changed, make sure to inspect and possibly update part 3 kernel
 //constexpr int n = 10000;
 // NOTE For further inquiry part 2 over 128 threads per block is not working
-const int MAX_NUM = 10000;
+const int MAX_NUM = 20000;
 // this is the size of the block 
-constexpr int TILE_SIZE = 128;
+constexpr int TILE_SIZE = 31;
 // Max number of blocks as per spec
 constexpr int max_blocks = 32767;
 
@@ -81,7 +81,8 @@ __global__ void gemv_part2_ver1(const T * matrix, const T * vector, T * result, 
 {
     const unsigned int thread_index = threadIdx.x + blockIdx.x * blockDim.x;
 
-    __shared__ T vector_shared[TILE_SIZE];
+    //__shared__ T vector_shared[TILE_SIZE];
+    extern __shared__ T vector_shared[];
 
     T temp = 0.0;
 
