@@ -380,5 +380,289 @@ void write_data(std::vector<T> w_memory, std::vector<T> wo_memory, std::vector<i
     }
 }
 
+template<typename T>
+__global__ void gemv_part2_verML_overflow16(const T* matrix, const T* vector, T* result, const int row, const int col)
+{   
+    //int n = row;
 
+    //T matrix_local[n / 4];
+    __shared__ T vector_shared[n / 16];
+
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    T sum2 = 0.0;
+
+    T sum = 0.0;
+    // sum += matrix[j * row + i] * vector[j];
+
+    if (index < row) {
+
+        for (int i = 0; i < n / 16; i++) {
+            //matrix_local[i] = matrix[i * row + index];
+            vector_shared[i] = vector[i];
+            //x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[j * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        int x = 0;
+        for (int i = n / 16; i < n / 8; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + (n / 16)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = n / 8; i < (3 * n) / 16; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + (n / 8)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (3 * n) / 16; i < n / 4; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + ((3 * n) / 16)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = n / 4; i < (5 * n) / 16; i++) {
+            //matrix_local[i] = matrix[i * row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + (n / 4)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (5 * n) / 16; i < (3 * n) / 8; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + ((5 * n) / 16)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (3 * n) / 8; i < (7 * n) / 16; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + ((3 * n) / 8)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (7 * n) / 16; i < n / 2; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + ((7 * n) / 16)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        // halfway
+
+        x = 0;
+        for (int i = n / 2; i < (9 * n) / 16; i++) {
+            //matrix_local[i] = matrix[i * row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + (n / 2)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (9 * n) / 16; i < (5 * n) / 8; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + (9 * n) / 16) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (5 * n) / 8; i < (11 * n) / 16; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + (5 * n) / 8) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (11 * n) / 16; i < (3 * n) / 4; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + ((11 * n) / 16)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (3 * n) / 4; i < (13 * n) / 16; i++) {
+            //matrix_local[i] = matrix[i * row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + (3 * n / 4)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (13 * n) / 16; i < (7 * n) / 8; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + ((13 * n) / 16)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+
+
+        x = 0;
+        for (int i = (7 * n) / 8; i < (15 * n) / 16; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + ((7 * n) / 8)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (15 * n) / 16; i < n; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+
+
+        for (int j = 0; j < n / 16; j++) {
+            sum += matrix[(j + ((15 * n) / 16)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+
+        // fake work below this line 
+
+
+        x = 0;
+        for (int i = (7 * n) / 8; i < (15 * n) / 16; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum2 = matrix[(j + ((7 * n) / 8)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (15 * n) / 16; i < n; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum2 = matrix[(j + ((15 * n) / 16)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (7 * n) / 8; i < (15 * n) / 16; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum2 = matrix[(j + ((7 * n) / 8)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (15 * n) / 16; i < n; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum2 = matrix[(j + ((15 * n) / 16)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        /*
+        x = 0;
+        for (int i = (15 * n) / 16; i < n; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum2 = matrix[(j + ((15 * n) / 16)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (7 * n) / 8; i < (15 * n) / 16; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum2 = matrix[(j + ((7 * n) / 8)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+
+        x = 0;
+        for (int i = (15 * n) / 16; i < n; i++) {
+            //matrix_local[x] = matrix[(i)*row + index];
+            vector_shared[x] = vector[i];
+            x++;
+        }
+
+        for (int j = 0; j < n / 16; j++) {
+            sum2 = matrix[(j + ((15 * n) / 16)) * row + index] * vector_shared[j]; // multiply and accumulate with row-major ordering
+        }
+        */
+
+
+        //result[index] = sum;
+    }
+    result[index] = sum;
+}
 
