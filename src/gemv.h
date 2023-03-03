@@ -741,7 +741,4 @@ __global__ void gemv_part2_verML_overflow16(const T* matrix, const T* vector, T*
     }
     result[index] = sum;
 }
-<<<<<<< HEAD
-=======
 
->>>>>>> 703ddcc94b6e9261f375913e88ead759d74a3321
